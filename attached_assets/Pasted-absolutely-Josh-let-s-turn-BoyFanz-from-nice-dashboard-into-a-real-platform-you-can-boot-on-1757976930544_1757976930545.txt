@@ -1,0 +1,247 @@
+absolutely, Josh — let’s turn BoyFanz from “nice dashboard” into a **real platform** you can boot on Replit and scale. Below is a concrete, drop-in **technical blueprint** (DB schema + API map + routing/RBAC + media + payments + admin). It lines up with the stack you already declared (React + Vite + Tailwind/shadcn, Express + TS, Drizzle + Postgres, Uppy → S3, Sharp, WS, TanStack Query, Wouter)— and plugs directly into what you’ve started for **UserManagement**, **ThemeManager**, and **ModerationQueue** (we’ll wire those to real APIs).
+
+---
+
+# TL;DR (what changes now)
+
+* **Separate dashboards** for **Fan / Creator / Admin** (no more same view for fans + creators).
+* **Real backend** (Express + Drizzle + Postgres) with **RBAC**, **KYC gates**, **subscriptions + PPV + tips**, **payouts**, **moderation**, and **audit logs**.
+* **Media pipeline** with **S3 presigned uploads**, **Sharp thumbnails**, and **entitlement checks** before serving.
+* **Admin control center** powering your existing pages with real data (analytics, payouts, bans, DMCA, announcements).
+* Clean **Replit workflow** (scripts & env) using your current package.json build path.
+
+---
+
+# 1) Database schema (Drizzle, PostgreSQL)
+
+> Tables are normalized, indexable, and map 1:1 to the API. (Use `drizzle-kit` to push/migrate.)
+
+**Core**
+
+* `users(id, email UNIQUE, hash/null, role ENUM['fan','creator','admin'], status ENUM['active','suspended','pending'], created_at, updated_at)`
+* `profiles(user_id FK→users.id, display_name, avatar_url, bio, location, birthday, is_verified BOOL DEFAULT false)`
+* `sessions(id, user_id FK, expires_at, created_at)` (for express-session store or JWT list)
+
+**Creator graph**
+
+* `creators(user_id FK, handle UNIQUE, onboarding_complete BOOL, kyc_status ENUM['unverified','pending','verified','rejected'], kyc_provider_ref)`
+* `subscriptions(id, fan_id FK→users.id, creator_id FK→users.id, status ENUM['active','canceled','past_due'], renews_at, price_cents, currency)`
+* `follows(fan_id, creator_id, created_at)` (free follow for feed even w/o sub)
+* `posts(id, creator_id FK, title, caption, visibility ENUM['subscribers','ppv','public'], price_cents, scheduled_at, published_at, created_at)`
+* `media_assets(id, post_id FK, owner_id FK→users.id, mime_type, size_bytes, storage_key, thumb_key, width, height, duration_sec, status ENUM['processing','ready','blocked'], created_at)`
+* `purchases(id, buyer_id FK, post_id FK NULL, media_id FK NULL, kind ENUM['ppv','bundle'], amount_cents, currency, provider_txn_id, status ENUM['succeeded','refunded','failed'], created_at)`
+* `tips(id, from_user_id FK, to_user_id FK, amount_cents, currency, provider_txn_id, status, created_at)`
+* `payout_accounts(id, user_id FK, provider ENUM['stripe','crypto','manual'], provider_ref, status, created_at)`
+* `payout_requests(id, user_id FK, amount_cents, currency, status ENUM['requested','approved','paid','rejected'], notes, created_at, updated_at)`
+* `earnings_ledger(id, user_id, source ENUM['subscription','ppv','tip'], gross_cents, fees_cents, net_cents, ref_table, ref_id, created_at)`
+
+**Safety & compliance**
+
+* `kyc_verifications(id, user_id FK, provider ENUM['veriff','jumio','verifymy'], status, webhook_payload JSONB, created_at, updated_at)`
+* `moderation_items(id, owner_id FK, media_id FK NULL, post_id FK NULL, reason, status ENUM['pending','approved','rejected'], notes, created_at, decided_at)` → feeds your **ModerationQueue**
+* `audit_logs(id, actor_id FK, action, entity, entity_id, meta JSONB, created_at)`
+* `bans(id, user_id FK, reason, expires_at NULL, created_at)`
+
+**Messaging & notifications**
+
+* `threads(id, creator_id, fan_id, created_at)`
+* `messages(id, thread_id FK, sender_id FK, body, media_id FK NULL, created_at)`
+* `notifications(id, user_id FK, type, payload JSONB, read_at NULL, created_at)`
+
+**Branding & theming**
+
+* `themes(id, name, colors JSONB, typography JSONB, effects JSONB, is_active BOOL, created_at)` → wires to your **ThemeManager** page.
+
+Indexes you’ll want immediately:
+
+* `users(email)`, `users(role)`, `subscriptions(fan_id, status)`, `subscriptions(creator_id, status)`,
+  `media_assets(post_id)`, `purchases(buyer_id, created_at)`, `payout_requests(user_id, status)`,
+  `moderation_items(status, created_at)`, `audit_logs(entity, entity_id)`.
+
+---
+
+# 2) REST API (Express + Zod + Drizzle)
+
+> Route prefixes & payloads mirror your components so you can swap mocks → live. Stack matches your plan from `replit.md` and `package.json` deps: Express, ws, TanStack Query, Uppy, Sharp, Drizzle, Zod.
+
+**Auth & profile**
+
+* `POST /api/auth/login` (OIDC or local dev), `POST /api/auth/logout`, `GET /api/auth/me`
+* `GET /api/profile/:userId`, `PUT /api/profile` (edit)
+
+**RBAC guard**
+
+* Middleware: `requireRole('creator'|'fan'|'admin')` — gate routes below.
+
+**Creator**
+
+* `GET /api/creator/me` → onboarding + kyc status
+* `POST /api/creator/onboarding/complete`
+* `GET /api/creator/earnings` → sums from `earnings_ledger`
+* `POST /api/posts` (visibility, price, schedule)
+* `GET /api/posts?creatorId=&visibility=`
+* `PUT /api/posts/:id`, `DELETE /api/posts/:id`
+
+**Media (Uppy + S3)**
+
+* `POST /api/media/presign` → returns `{uploadUrl, key}` for direct client upload (Uppy)
+* `POST /api/media/complete` → Sharp → thumbnails, store metadata, enqueue moderation
+* `GET /api/media/:id/stream` → entitlement check (subscriber/owner/purchase)
+* `DELETE /api/media/:id`
+
+**Fan**
+
+* `POST /api/subscriptions/:creatorId` (start), `DELETE /api/subscriptions/:creatorId` (cancel)
+* `GET /api/feed` → posts from follows/subscriptions
+* `POST /api/purchases/ppv/:postId`
+* `POST /api/tips/:creatorId`
+
+**Messaging**
+
+* `GET /api/threads`, `POST /api/threads/:creatorId`
+* `GET /api/messages?threadId=`, `POST /api/messages`
+
+**Payments & payouts**
+
+* `POST /api/payments/checkout` (provider-agnostic adapter)
+* `POST /api/payouts/request`
+* `GET /api/payouts/my`
+* `POST /api/webhooks/payment` (provider)
+* `POST /api/payouts/:id/approve` (admin)
+* `POST /api/payouts/:id/pay` (admin)
+  (Your `Payouts.tsx` can bind to these now.)
+
+**Compliance & moderation**
+
+* `POST /api/kyc/start` (returns provider link/token)
+* `POST /api/webhooks/kyc` (provider → updates `kyc_verifications`)
+* `GET /api/moderation/queue` (admin)
+* `PUT /api/moderation/:id/approve` / `reject` with notes → powers **ModerationQueue** UI
+
+**Admin**
+
+* `GET /api/admin/overview` (GMV, net, creators, fans, ARPU, churn)
+* `GET /api/users` / `PUT /api/users/:id` (role/status) — replaces mocks in **UserManagement**
+* `GET /api/audit`
+* `POST /api/admin/announce` (broadcast → ws + notifications)
+* `GET /api/themes`, `POST /api/themes`, `PUT /api/themes/:id`, `PUT /api/themes/:id/activate`, `DELETE /api/themes/:id` — exactly what your **ThemeManager** expects.
+
+**Notifications (real-time)**
+
+* `ws://…/realtime` (subscribe to user channel) & `POST /api/notify` for server → client pushes.
+
+---
+
+# 3) Frontend routing & role separation (Wouter)
+
+> You’re using **Wouter** + **TanStack Query**; keep it lean and add guards.
+
+```ts
+// pseudo-router map
+/                  → Landing (public)
+/login             → Auth
+/fan               → FanDashboard  (feed, subs, wallet)
+/creator           → CreatorDashboard (posts, media, earnings, payouts)
+/admin             → AdminHome (analytics)
+/admin/users       → UserManagement   ✅ hook to /api/users
+/admin/moderation  → ModerationQueue  ✅ hook to /api/moderation/queue
+/admin/themes      → ThemeManager     ✅ hook to /api/themes
+/settings          → Settings
+```
+
+**Guard HOC**
+
+* `withRole('fan'|'creator'|'admin')` reads `useAuth().user.role`; redirect if mismatch (your pages already check admin and show “Access denied” — swap that for a route guard so fans never see admin UI).
+
+---
+
+# 4) Media pipeline (Uppy → S3 → Sharp)
+
+* **Uppy Dashboard** in **Media.tsx** uses `/api/media/presign` → uploads directly to S3 (Wasabi/Mojo S3 OK).
+* Server `complete` handler:
+
+  1. Verify `owner_id` (creator + KYC verified).
+  2. Run **Sharp** to generate `thumb_key` & store dims/duration.
+  3. Insert `moderation_items` row (status `pending`).
+  4. Block serving until moderated; **ModerationQueue** approves/rejects.
+* **Stream endpoint** enforces entitlement: owner OR active sub OR PPV purchase.
+
+---
+
+# 5) Payments & payouts
+
+* **Adapter pattern**: `providers/stripe.ts`, `providers/mock.ts`, `providers/crypto.ts`. `payments.ts` calls the active provider (you already listed a provider-agnostic approach in your plan).
+* **Subscriptions** = recurring product; **PPV** = one-off purchase; **tips** = transfer.
+* Webhooks write to `purchases`, `tips`, and `earnings_ledger`.
+* **Payouts**: creators connect account; request -> admin approve/pay -> ledger settles. Your **Payouts.tsx** can show `payout_requests` + `earnings_ledger` summaries immediately.
+
+---
+
+# 6) Compliance gates
+
+* **Posting lock**: creators cannot post until `kyc_verifications.status = 'verified'`.
+* **Age wall** for fans before payment content.
+* **Audit** every admin action into `audit_logs`.
+* Hook **VerifyMy/Jumio/Veriff** via `/api/kyc/start` + webhook (mentioned in your architecture doc).
+
+---
+
+# 7) Admin Command Center (powers what you’ve built)
+
+* Wire **UserManagement** → `/api/users` (list, search, role/status update).
+* Wire **ModerationQueue** → `/api/moderation/queue` + approve/reject endpoints.
+* Wire **ThemeManager** → `/api/themes` endpoints (create/edit/activate/delete).
+* Add pages for **Revenue Analytics**, **DMCA/Takedowns**, **Payouts Review**, **System Announcements**.
+
+---
+
+# 8) Replit setup (works with your scripts)
+
+* `npm run dev` ⇒ `tsx server/index.ts` (Express API + Vite dev)
+* `npm run build` ⇒ `vite build` client + `esbuild server/index.ts` to `dist`
+* `npm run start` ⇒ `node dist/index.js` (prod)
+* Keep **TanStack Query**, **Wouter**, **Uppy**, **Sharp**, **ws**, **Drizzle**, **shadcn/ui** as declared.
+
+**ENV you’ll need** (Replit Secrets):
+
+```
+DATABASE_URL=...
+SESSION_SECRET=...
+S3_ENDPOINT=...
+S3_BUCKET=...
+S3_ACCESS_KEY=...
+S3_SECRET_KEY=...
+PAYMENT_PROVIDER=stripe|mock
+STRIPE_SECRET=...
+KYC_PROVIDER=verifymy|...
+KYC_SECRET=...
+ORIGIN=https://<repl-url>
+```
+
+---
+
+# 9) Immediate TODOs (zero fluff, high impact)
+
+1. **Add RBAC router guards** and split routes: `/fan`, `/creator`, `/admin`.
+2. **Implement /api/users, /api/moderation, /api/themes** to replace mock data in existing pages.
+3. **Stand up media presign + complete + stream** and switch **Media.tsx** to Uppy S3 flow.
+4. **Add subscriptions + PPV endpoints** (adapter uses `mock` first).
+5. **KYC gate**: block posting until verified.
+6. **Earnings ledger + payouts**: creator view + admin approval.
+7. **Notifications + ws**: push approvals, tips, purchases in real-time.
+
+---
+
+# Want starter code?
+
+I can generate:
+
+* Drizzle schema files for all tables
+* Express route scaffolds with Zod validation
+* A tiny RBAC guard + Wouter route map
+* S3 presign/complete + Sharp thumbnailer
+* Payment “mock” provider you can later flip to Stripe
+
+Say the word and I’ll drop **ready-to-paste TypeScript files** tailored to your repo layout. 🔧🔥
+
+**This is how BoyFanz stops “looking like a platform” and actually becomes one.**

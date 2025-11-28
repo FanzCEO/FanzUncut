@@ -1,0 +1,113 @@
+alright Josh — here’s a no-BS, mega list of processors and rails that actually work with adult. i’m grouping them so you can plug + play across FANZ. nobody gets a free pass here: policies shift fast, so I’m flagging mainstream no-gos too.
+
+# Core card processors/gateways (adult-first)
+
+* CCBill. Global adult merchant accounts, cards + e-checks, strong risk + compliance. ([CCBill][1])
+* Segpay. Adult/dating specialist, global acquiring, chargeback tools. ([Segpay][2])
+* Epoch. Longtime adult subscription billing/IPSP, multi-currency, recurring. ([Corefy][3], [Paylobby][4])
+* Verotel. Adult-friendly processing since the 90s; also offers US paper check payout option.
+* Vendo Services. Gateway + acquiring for “content platforms, fan sites & cams,” with Pay-by-Bank options. ([Vendo][5])
+* CommerceGate. EU acquiring for adult; risk + compliance guidance. ([CommerceGate][6])
+* NETbilling. Adult/high-risk gateway; cards + ACH/e-checks.
+* RocketGate. Enterprise adult billing gateway/acquirer routing.
+* CentroBill. Adult subscription/paywall processing. ([Centrobill][7])
+* VXS / VXSBill (VirtualXS). EU PSP with cards + iDEAL/SOFORT + phone billing. ([VXS][8])
+* Inovio. Adult merchant accounts + gateway, PCI, recurring. ([Inoviopay][9])
+* Truevo (select programs). Publicly markets payment solutions for adult/high-risk. (Due diligence required.) ([Truevo Payments][10])
+
+# High-risk ISOs / facilitators that routinely place adult
+
+* Corepay. Adult/high-risk merchant placement & MasterCard rules briefings. ([Corepay][11])
+* PayKings. Adult merchant account programs. ([PayKings][12])
+* PaymentCloud / SMB Global / Easy Pay Direct. High-risk desks with adult offerings. (Programs vary by sub-vertical.) ([Easy Pay Direct][13])
+* MobiusPay. Awarded in adult categories; merchant services for adult. ([Wikipedia][14])
+* Merchant advisors/brokers (UK/EU examples): Merchant Advice Service / Merchant Advice (adult). (Use for EU acquiring placement.) ([Merchant Advice][15], [Merchant Advice][16])
+
+# Crypto payment gateways used by adult
+
+* NOWPayments (explicit “Adult” solution pages; anonymous options; on/off-ramp support). ([NOWPayments][17])
+* CoinsPaid / CryptoProcessing.com (enterprise crypto acquiring; adult compatible programs). ([CoinsPaid][18])
+* B2BinPay (markets an “adult platforms” crypto gateway). ([B2BINPAY][19])
+* CoinPayments (positions for high-risk incl. adult; check current AUP before go-live). ([CoinPayments Media][20])
+
+# Payout e-wallets & mass-pay used across adult creator platforms
+
+* Paxum. Adult-industry standard for creator payouts (won “Alternative Payment” at XBIZ). ([Wikipedia][14])
+* CosmoPayment. Prepaid/Visa payout programs used by cam/creator sites (creator forums reference). ([Reddit][21])
+* ePayService. Multi-rail payouts (cards/IBAN), widely used in entertainment & affiliate ecosystems. (Confirm current AUP per use case.) ([epayservices.com][22])
+* i-Payout, MassPay. Mass disbursements (banks, cards, APMs) for marketplaces/UGC platforms. ([i-payout][23], [masspay.io][24])
+
+# Bank transfer rails / e-checks (ACH/SEPA) that are adult-capable
+
+* ACH / e-check via NETbilling (gateway option).
+* Verotel “US Check” payout option. (Paper check issuance to US creators.)
+* SEPA/Wires: available via most adult acquirers above (merchant settlement); confirm with each acquirer’s AUP & settlement corridors.
+
+# Direct Carrier Billing (DCB) / telco-wallets (regional add-ons; adult acceptance varies by MNO and country)
+
+* Bango, Boku, DIMOCO (carrier billing aggregators). Useful for soft-subscription upsells where allowed. (Always validate local carrier content policies.) ([Bango][25], [Nilson Report][26], [DIMOCO][27])
+
+# Reality check — mainstream processors that are typically **not** OK for adult
+
+* Stripe: adult content and services are on the restricted/prohibited list. ([Stripe Support][28], [Stripe][29])
+* PayPal: bans digital adult content (e.g., VOD, cams) in AUP. ([PayPal][30])
+* Coinbase Commerce: “Adult Content and Services” are listed as prohibited. (Crypto gateway not viable here.) ([Hacker News][31], [Coinbase][32])
+  *(Square/Klarna and many mainstream wallets similarly restrict adult verticals.)* ([Square][33])
+
+---
+
+## Quick picks by use-case (how I’d wire FANZ today)
+
+* **Cards + recurring**: CCBill or Segpay (primary), Vendo or CommerceGate (EU routing), Epoch (subscriptions at scale). ([CCBill][1], [Segpay][2], [Vendo][5])
+* **ACH / local bank pay**: NETbilling (ACH), Vendo Pay-by-Bank (EU/LatAm pilots). ([Vendo][5])
+* **Creator payouts**: Paxum (default), ePayService / CosmoPayment (backup), plus bank wires. ([Wikipedia][14], [epayservices.com][22])
+* **Crypto tips/subs**: NOWPayments or CoinsPaid; settle to fiat via vetted exchange accounts (not Coinbase Commerce). ([NOWPayments][17], [CoinsPaid][18], [Hacker News][31])
+* **Telco add-on** (where legal): Bango/Boku/DCB for upsells. ([Bango][25], [Nilson Report][26])
+
+---
+
+### Important caveats (so we don’t get clipped)
+
+* Policies shift constantly (e.g., card-network rules for adult platforms). Build with multi-MID routing + hot-swap failover. ([VICE][34], [ACLU of Oklahoma][35])
+* Sub-vertical matters (cams vs. fan sites vs. dating vs. studios): each provider’s AUP differs — pre-vet your exact flows (UGC pre-moderation, 2257/age-verification, chargeback plan). ([Segpay][36])
+
+---
+
+Want me to turn this into a living “FANZ Payments Matrix” (columns for AUP notes, rails, regions, fees, KYC, payout speeds) so your team can route by brand/geo in one glance? I can spin that up now.
+
+[1]: https://ccbill.com/industries/adult-business?utm_source=chatgpt.com "Adult Merchant Account and Adult Payment Processing"
+[2]: https://segpay.com/verticals/high-risk/?utm_source=chatgpt.com "Adult Merchant Accounts and Payment Processing"
+[3]: https://corefy.com/integrations/payment-providers/epoch?utm_source=chatgpt.com "Epoch (epoch) - Payment Provider Integration"
+[4]: https://paylobby.de/en/payment-anbieter/payment-im-adult-entertainment?utm_source=chatgpt.com "Payment service provider for the online adult entertainment ..."
+[5]: https://vendoservices.com/ "Payment Processing - Vendo"
+[6]: https://www.commercegate.com/how-to-choose-a-reliable-adult-payment-processor-for-your-business/?utm_source=chatgpt.com "How to Choose a Reliable Adult Payment Processor for ..."
+[7]: https://centrobill.com/solutions-adult/?utm_source=chatgpt.com "Adult Payment Gateway for High-Risk Processing"
+[8]: https://vxs.com/billing.php?utm_source=chatgpt.com "Payment processing"
+[9]: https://www.inoviopay.com/industries/high-risk/adult?utm_source=chatgpt.com "Adult Entertainment Merchant Accounts & Payment Gateways"
+[10]: https://truevo.com/payment-solutions-for-the-adult-industry/?utm_source=chatgpt.com "Payment Solutions for the Adult Industry"
+[11]: https://corepay.net/articles/mastercard-adult-content-revisions/?utm_source=chatgpt.com "Mastercard Adult Content Revisions - What Merchants ..."
+[12]: https://paykings.com/high-risk-processing-industries/adult-merchant-account-solutions/?utm_source=chatgpt.com "Adult Payment Processing and Merchant Account"
+[13]: https://www.easypaydirect.com/merchant-accounts/adult-industry-credit-card-processing/?utm_source=chatgpt.com "Adult Industry Credit Card Processing & Merchant Account ..."
+[14]: https://en.wikipedia.org/wiki/XBIZ_Awards?utm_source=chatgpt.com "XBIZ Awards"
+[15]: https://www.merchantadviceservice.co.uk/high-risk-merchant-accounts/payment-processing-adult-companies?utm_source=chatgpt.com "Merchant Accounts for Adult Companies"
+[16]: https://merchantadvice.co.uk/high-risk-merchant-accounts/adult-merchant-account-payment-processing/?utm_source=chatgpt.com "Best Adult Merchant Accounts & Payment Processing Providers"
+[17]: https://nowpayments.io/all-solutions/adult?utm_source=chatgpt.com "Crypto Payments for Adult Industry - NOWPayments"
+[18]: https://coinspaid.com/about-us/?utm_source=chatgpt.com "About CoinsPaid Company"
+[19]: https://b2binpay.com/en/solutions/adult?utm_source=chatgpt.com "Cryptocurrency Payment Gateway for Adult Platforms"
+[20]: https://media.coinpayments.net/business-education/payment-gateway-for-high-risk-businesses/?utm_source=chatgpt.com "Payment Gateway For High-Risk Businesses: Benefits Of Crypto"
+[21]: https://www.reddit.com/r/CamGirlProblems/comments/pxu7xt/cosmo_payment_vs_paxum_vs_epayservices/?utm_source=chatgpt.com "Cosmo Payment VS paxum VS epayservices"
+[22]: https://www.epayservices.com/?utm_source=chatgpt.com "ePayService - Home"
+[23]: https://www.i-payout.com/?utm_source=chatgpt.com "i-payout | Global Mass Payout Solutions for Businesses"
+[24]: https://www.masspay.io/?utm_source=chatgpt.com "MassPay - Global Payments Local Preferences"
+[25]: https://bango.com/direct-carrier-billing/?utm_source=chatgpt.com "Direct Carrier Billing (DCB) - Bango"
+[26]: https://nilsonreport.com/articles/boku-direct-carrier-billing/?utm_source=chatgpt.com "Boku Direct Carrier Billing"
+[27]: https://www.dimoco.com/products/carrier-billing/?utm_source=chatgpt.com "Carrier Billing - DIMOCO"
+[28]: https://support.stripe.com/questions/prohibited-and-restricted-businesses-list-faqs?utm_source=chatgpt.com "Prohibited and Restricted Businesses List — FAQs"
+[29]: https://stripe.com/en-br/legal/restricted-businesses?utm_source=chatgpt.com "Prohibited and Restricted Businesses"
+[30]: https://www.paypal.com/us/legalhub/paypal/acceptableuse-full?utm_source=chatgpt.com "Acceptable Use Policy"
+[31]: https://news.ycombinator.com/item?id=16381814&utm_source=chatgpt.com "Coinbase Commerce: merchants can accept multiple ..."
+[32]: https://www.coinbase.com/legal/user_agreement/kenya?utm_source=chatgpt.com "Coinbase User Agreement"
+[33]: https://squareup.com/help/us/en/article/6386-why-can-t-square-support-all-businesses?utm_source=chatgpt.com "Understand Square's business restrictions"
+[34]: https://www.vice.com/en/article/mastercard-now-requires-documented-consent-from-adult-sites/?utm_source=chatgpt.com "Mastercard Now Requires 'Documented Consent' From ..."
+[35]: https://www.acluok.org/en/news/how-mastercard-endangering-sex-workers?utm_source=chatgpt.com "How Mastercard is Endangering Sex Workers"
+[36]: https://segpay.com/blog/adult-industry-compliance/?utm_source=chatgpt.com "Adult Industry Compliance"

@@ -1,0 +1,35 @@
+# FANZ Platform Code Ownership
+# Global owners for all files
+* @FanzCEO @FanzDash-Team @FanzDash-Security
+
+# Critical system files require additional security team approval
+/.github/ @FanzCEO @FanzDash-Security @FanzDash-CI
+/.gitlab-ci.yml @FanzCEO @FanzDash-Security @FanzDash-CI
+/docker-compose.yml @FanzCEO @FanzDash-Security @FanzDash-CI
+/Dockerfile @FanzCEO @FanzDash-Security @FanzDash-CI
+/.devcontainer/ @FanzCEO @FanzDash-Security @FanzDash-CI
+
+# Security and compliance files
+/SECURITY.md @FanzCEO @FanzDash-Security
+/PRIVACY.md @FanzCEO @FanzDash-Security
+/ACCESSIBILITY.md @FanzCEO @FanzDash-Security
+/COMPLIANCE.md @FanzCEO @FanzDash-Security
+
+# Payment system files (critical for adult industry compliance)
+/server/services/*Payment*.ts @FanzCEO @FanzDash-Security @FanzDash-Payments
+/server/services/*payment*.ts @FanzCEO @FanzDash-Security @FanzDash-Payments
+/server/routes/*payment*.ts @FanzCEO @FanzDash-Security @FanzDash-Payments
+/server/services/adultPaymentProviders.ts @FanzCEO @FanzDash-Security @FanzDash-Payments
+/server/services/hostMerchantServices.ts @FanzCEO @FanzDash-Security @FanzDash-Payments
+
+# Environment and configuration files
+/.env* @FanzCEO @FanzDash-Security
+/config/ @FanzCEO @FanzDash-Security
+
+# Database schema and migrations
+/shared/schema.ts @FanzCEO @FanzDash-Security @FanzDash-Backend
+/migrations/ @FanzCEO @FanzDash-Security @FanzDash-Backend
+
+# Package management
+/package.json @FanzCEO @FanzDash-CI
+/pnpm-lock.yaml @FanzDash-CI

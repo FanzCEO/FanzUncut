@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoyFanz - Offline</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/pwa-icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Underground background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/underground-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .offline-container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.5));
+        }
+
+        .neon-title {
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 3rem;
+            color: #ff0000;
+            text-shadow: 
+                0 0 10px rgba(255, 0, 0, 0.8),
+                0 0 20px rgba(255, 0, 0, 0.6),
+                0 0 30px rgba(255, 0, 0, 0.4);
+            margin-bottom: 1rem;
+            animation: subtle-pulse 3s ease-in-out infinite;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #d4af37;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .offline-message {
+            font-size: 1.1rem;
+            color: #cccccc;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            background: transparent;
+            border: 2px solid #ff0000;
+            color: #ff0000;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+            box-shadow: 
+                0 0 10px rgba(255, 0, 0, 0.2),
+                inset 0 0 10px rgba(255, 0, 0, 0.05);
+        }
+
+        .retry-button:hover {
+            background: rgba(255, 0, 0, 0.1);
+            text-shadow: 0 0 8px rgba(255, 0, 0, 0.8);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 0, 0.4),
+                inset 0 0 15px rgba(255, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .features {
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature {
+            padding: 1.5rem;
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #d4af37;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: #cccccc;
+            line-height: 1.4;
+        }
+
+        .network-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 100;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes subtle-pulse {
+            0%, 100% {
+                opacity: 1;
+                text-shadow: 
+                    0 0 10px rgba(255, 0, 0, 0.8),
+                    0 0 20px rgba(255, 0, 0, 0.6),
+                    0 0 30px rgba(255, 0, 0, 0.4);
+            }
+            50% {
+                opacity: 0.95;
+                text-shadow: 
+                    0 0 15px rgba(255, 0, 0, 0.9),
+                    0 0 25px rgba(255, 0, 0, 0.7),
+                    0 0 35px rgba(255, 0, 0, 0.5);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            .neon-title {
+                font-size: 2rem;
+            }
+            
+            .offline-container {
+                padding: 1rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="network-status" id="networkStatus">
+        🔴 OFFLINE
+    </div>
+
+    <div class="offline-container">
+        <img src="/boyfanz-logo.png" alt="BoyFanz Logo" class="logo">
+        
+        <h1 class="neon-title">BoyFanz</h1>
+        <p class="subtitle">Every Man's Playground</p>
+        
+        <div class="offline-message">
+            <p>You're currently offline, but BoyFanz is still working for you.</p>
+            <p>Your messages and actions will sync when you're back online.</p>
+        </div>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            Retry Connection
+        </button>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">💬</div>
+                <div class="feature-title">Cached Messages</div>
+                <div class="feature-desc">View your recent conversations and continue chatting offline</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">App Experience</div>
+                <div class="feature-desc">Full app functionality even without internet connection</div>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">Auto Sync</div>
+                <div class="feature-desc">Everything syncs automatically when you're back online</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function retryConnection() {
+            if (navigator.onLine) {
+                window.location.reload();
+            } else {
+                // Show a message that device is still offline
+                const button = document.querySelector('.retry-button');
+                const originalText = button.textContent;
+                button.textContent = 'Still Offline...';
+                button.style.opacity = '0.6';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.opacity = '1';
+                }, 2000);
+            }
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            document.getElementById('networkStatus').innerHTML = '🟢 BACK ONLINE';
+            document.getElementById('networkStatus').style.background = 'rgba(34, 197, 94, 0.9)';
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('networkStatus').innerHTML = '🔴 OFFLINE';
+            document.getElementById('networkStatus').style.background = 'rgba(255, 0, 0, 0.9)';
+        });
+
+        // Update network status on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (navigator.onLine) {
+                document.getElementById('networkStatus').innerHTML = '🟢 ONLINE';
+                document.getElementById('networkStatus').style.background = 'rgba(34, 197, 94, 0.9)';
+            }
+        });
+
+        // Keyboard shortcut for retry
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                retryConnection();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+~/workspace$ rm -f .git/index.lock
+~/workspace$ git merge --abort
+error: Entry 'shared/schema.ts' not uptodate. Cannot merge.
+fatal: Could not reset index file to revision 'HEAD'.
+~/workspace$ npm error code EJSONPARSE
+npm error JSON.parse Invalid package.json: JSONParseError: Expected double-quoted property name in JSON at position 2234 while parsing near "...moizee\": \"^0.4.12\",\n<<<<<<< HEAD\n    \"@t..."
+npm error JSON.parse Failed to parse JSON data.
+npm error JSON.parse Note: package.json must be actual JSON, not just JavaScript.
+npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2025-09-29T16_21_25_985Z-debug-0.log
+Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help
+Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help
+Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help
+Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help
+Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help
+~/workspace$ git add shared/schema.ts
+git add package.json
+git commit -m "Resolve merge conflicts"
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+~/workspace$ git add shared/schema.ts
+git add package.json
+git commit -m "Resolve merge conflicts"
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+~/workspace$ git stash
+git merge --abort
+git stash pop
+error: could not write index
+fatal: Unable to create '/home/runner/workspace/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+No stash entries found.
+~/workspace$ 

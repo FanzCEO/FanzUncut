@@ -1,0 +1,784 @@
+# BoyFanz CMS + Theme Studio (Shopify-style) – Drop-in Starter Pack
+
+> Structure, DB (Drizzle), API (Express + Zod), S3 assets, Preview/Publish service, and Admin UI (React + shadcn). Paste these into your repo on Replit. Replace placeholders (e.g., bucket names) in `.env`.
+
+---
+
+## File tree (suggested)
+
+```
+server/
+  index.ts
+  db/
+    index.ts
+    schema.ts
+  middleware/
+    auth.ts
+    errors.ts
+  services/
+    s3.ts
+    publish.ts
+    preview.ts
+  routes/
+    themes.ts
+    themeVersions.ts
+    themeAssets.ts
+    pages.ts
+    menus.ts
+    preview.ts
+web/
+  src/lib/authGuard.tsx
+  src/routes/AdminCMS.tsx
+  src/routes/AdminCMSEditor.tsx
+  src/components/cms/SettingsForm.tsx
+  src/components/cms/PageTable.tsx
+  src/components/cms/MenuEditor.tsx
+  src/components/cms/AssetBrowser.tsx
+  src/components/cms/PreviewFrame.tsx
+```
+
+---
+
+## `server/db/schema.ts`
+```ts
+import { pgTable, serial, integer, text, boolean, timestamp, jsonb, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
+
+export const verStatus = pgEnum('ver_status', ['draft','published','archived']);
+export const pageStatus = pgEnum('page_status', ['draft','published']);
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  role: text('role').notNull(), // 'fan' | 'creator' | 'admin'
+  status: text('status').default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => ({ emailIdx: uniqueIndex('users_email_idx').on(t.email) }));
+
+export const themes = pgTable('themes', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const themeVersions = pgTable('theme_versions', {
+  id: serial('id').primaryKey(),
+  themeId: integer('theme_id').references(() => themes.id).notNull(),
+  label: text('label').default('v1').notNull(),
+  status: verStatus('status').default('draft').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const themeSettings = pgTable('theme_settings', {
+  id: serial('id').primaryKey(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  json: jsonb('json').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const themeAssets = pgTable('theme_assets', {
+  id: serial('id').primaryKey(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  path: text('path').notNull(),
+  storageKey: text('storage_key').notNull(),
+  mime: text('mime'),
+  sizeBytes: integer('size_bytes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const pages = pgTable('pages', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull(),
+  title: text('title').notNull(),
+  template: text('template').default('page').notNull(),
+  status: pageStatus('status').default('draft').notNull(),
+  seo: jsonb('seo').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => ({ slugIdx: uniqueIndex('pages_slug_idx').on(t.slug) }));
+
+export const pageSections = pgTable('page_sections', {
+  id: serial('id').primaryKey(),
+  pageId: integer('page_id').references(() => pages.id).notNull(),
+  type: text('type').notNull(),
+  sort: integer('sort').notNull(),
+  props: jsonb('props').default({}).notNull(),
+});
+
+export const menus = pgTable('menus', {
+  id: serial('id').primaryKey(),
+  handle: text('handle').notNull(),
+  title: text('title').notNull(),
+}, (t) => ({ handleIdx: uniqueIndex('menus_handle_idx').on(t.handle) }));
+
+export const menuItems = pgTable('menu_items', {
+  id: serial('id').primaryKey(),
+  menuId: integer('menu_id').references(() => menus.id).notNull(),
+  parentId: integer('parent_id'),
+  title: text('title').notNull(),
+  url: text('url').notNull(),
+  sort: integer('sort').default(0),
+});
+
+export const publishes = pgTable('publishes', {
+  id: serial('id').primaryKey(),
+  actorId: integer('actor_id').references(() => users.id).notNull(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const auditLogs = pgTable('audit_logs', {
+  id: serial('id').primaryKey(),
+  actorId: integer('actor_id').references(() => users.id).notNull(),
+  action: text('action').notNull(),
+  entity: text('entity').notNull(),
+  entityId: integer('entity_id').notNull(),
+  meta: jsonb('meta').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+```
+
+---
+
+## `server/db/index.ts`
+```ts
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle(pool);
+```
+
+---
+
+## `server/middleware/auth.ts`
+```ts
+import { Request, Response, NextFunction } from 'express';
+
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  // Replace with your real auth (session/JWT). For now assume req.user is set.
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
+export function requireRole(...roles: string[]) {
+  return (req: any, res: any, next: any) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Forbidden' });
+    next();
+  };
+}
+```
+
+---
+
+## `server/middleware/errors.ts`
+```ts
+import { NextFunction, Request, Response } from 'express';
+export function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction) {
+  console.error(err);
+  res.status(err.status || 500).json({ error: err.message || 'Server error' });
+}
+```
+
+---
+
+## `server/services/s3.ts`
+```ts
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+export const s3 = new S3Client({
+  region: process.env.THEME_S3_REGION,
+  credentials: {
+    accessKeyId: process.env.THEME_S3_KEY!,
+    secretAccessKey: process.env.THEME_S3_SECRET!,
+  },
+});
+
+const bucket = process.env.THEME_S3_BUCKET!;
+
+export async function presignThemeAsset(key: string, mime: string) {
+  const cmd = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: mime });
+  const url = await getSignedUrl(s3, cmd, { expiresIn: 60 * 5 });
+  return { uploadUrl: url, key };
+}
+```
+
+---
+
+## `server/services/preview.ts`
+```ts
+import jwt from 'jsonwebtoken';
+const secret = process.env.PREVIEW_JWT_SECRET!;
+
+export function signPreviewToken(versionId: number, userId: number) {
+  return jwt.sign({ v: versionId, uid: userId, preview: true }, secret, { expiresIn: '30m' });
+}
+export function verifyPreviewToken(token: string) {
+  return jwt.verify(token, secret) as any;
+}
+```
+
+---
+
+## `server/services/publish.ts`
+```ts
+import { db } from '../db/index';
+import { themes, themeVersions, publishes } from '../db/schema';
+import { eq } from 'drizzle-orm';
+
+export async function publishThemeVersion({ themeId, versionId, actorId }: { themeId: number; versionId: number; actorId: number; }) {
+  // Mark all versions of theme as archived except the one being published
+  await db.update(themeVersions).set({ status: 'archived' as any }).where(eq(themeVersions.themeId, themeId));
+  await db.update(themeVersions).set({ status: 'published' as any }).where(eq(themeVersions.id, versionId));
+  await db.update(themes).set({ isActive: true }).where(eq(themes.id, themeId));
+  await db.insert(publishes).values({ actorId, themeVersionId: versionId });
+}
+```
+
+---
+
+## `server/routes/themes.ts`
+```ts
+import { Router } from 'express';
+import { db } from '../db/index';
+import { themes, themeVersions, themeSettings } from '../db/schema';
+import { requireRole } from '../middleware/auth';
+import { eq, desc } from 'drizzle-orm';
+
+export const themesRouter = Router();
+
+// List themes
+themesRouter.get('/', requireRole('admin'), async (_req, res) => {
+  const rows = await db.select().from(themes);
+  res.json(rows);
+});
+
+// Active theme
+themesRouter.get('/active', async (_req, res) => {
+  const row = (await db.select().from(themes).where(eq(themes.isActive, true)).limit(1))[0] || null;
+  res.json(row);
+});
+
+// Create theme (with initial draft version + empty settings)
+themesRouter.post('/', requireRole('admin'), async (req, res) => {
+  const name = req.body?.name || 'Theme';
+  const [t] = await db.insert(themes).values({ name }).returning();
+  const [ver] = await db.insert(themeVersions).values({ themeId: t.id, label: 'v1', status: 'draft' as any }).returning();
+  await db.insert(themeSettings).values({ themeVersionId: ver.id, json: {} });
+  res.status(201).json({ theme: t, version: ver });
+});
+
+// Update theme meta
+themesRouter.put('/:id', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  await db.update(themes).set({ name: req.body.name }).where(eq(themes.id, id));
+  res.json({ ok: true });
+});
+
+// Activate theme (does not auto publish draft)
+themesRouter.put('/:id/activate', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  await db.update(themes).set({ isActive: true }).where(eq(themes.id, id));
+  res.json({ ok: true });
+});
+
+// Theme versions list
+themesRouter.get('/:id/versions', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(themeVersions).where(eq(themeVersions.themeId, id)).orderBy(desc(themeVersions.id));
+  res.json(rows);
+});
+
+// Create version (clone settings from latest)
+themesRouter.post('/:id/versions', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  const label = req.body?.label || `v${Date.now()}`;
+  const [latest] = await db.select().from(themeVersions).where(eq(themeVersions.themeId, id)).orderBy(desc(themeVersions.id)).limit(1);
+  const [ver] = await db.insert(themeVersions).values({ themeId: id, label, status: 'draft' as any }).returning();
+  if (latest) {
+    const [s] = await db.select().from(themeSettings).where(eq(themeSettings.themeVersionId, latest.id)).limit(1);
+    await db.insert(themeSettings).values({ themeVersionId: ver.id, json: s?.json || {} });
+  } else {
+    await db.insert(themeSettings).values({ themeVersionId: ver.id, json: {} });
+  }
+  res.status(201).json(ver);
+});
+```
+
+---
+
+## `server/routes/themeVersions.ts`
+```ts
+import { Router } from 'express';
+import { db } from '../db/index';
+import { themeSettings, themeVersions } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import { requireRole } from '../middleware/auth';
+import { publishThemeVersion } from '../services/publish';
+
+export const versionsRouter = Router();
+
+// Get settings for a version
+versionsRouter.get('/:verId/settings', requireRole('admin'), async (req, res) => {
+  const verId = Number(req.params.verId);
+  const [row] = await db.select().from(themeSettings).where(eq(themeSettings.themeVersionId, verId)).limit(1);
+  res.json(row?.json || {});
+});
+
+// Update settings
+versionsRouter.put('/:verId/settings', requireRole('admin'), async (req: any, res) => {
+  const verId = Number(req.params.verId);
+  await db.update(themeSettings).set({ json: req.body }).where(eq(themeSettings.themeVersionId, verId));
+  res.json({ ok: true });
+});
+
+// Publish version
+versionsRouter.post('/:themeId/versions/:verId/publish', requireRole('admin'), async (req: any, res) => {
+  const themeId = Number(req.params.themeId);
+  const verId = Number(req.params.verId);
+  await publishThemeVersion({ themeId, versionId: verId, actorId: req.user.id });
+  res.json({ published: verId });
+});
+```
+
+---
+
+## `server/routes/themeAssets.ts`
+```ts
+import { Router } from 'express';
+import { db } from '../db/index';
+import { themeAssets } from '../db/schema';
+import { requireRole } from '../middleware/auth';
+import { presignThemeAsset } from '../services/s3';
+
+export const assetsRouter = Router();
+
+assetsRouter.post('/:verId/assets/presign', requireRole('admin'), async (req, res) => {
+  const verId = Number(req.params.verId);
+  const { path, mime } = req.body;
+  const key = `themes/${verId}/${path}`;
+  const signed = await presignThemeAsset(key, mime);
+  res.json(signed);
+});
+
+assetsRouter.post('/:verId/assets/complete', requireRole('admin'), async (req, res) => {
+  const verId = Number(req.params.verId);
+  const { path, storageKey, mime, sizeBytes } = req.body;
+  const [row] = await db.insert(themeAssets).values({ themeVersionId: verId, path, storageKey, mime, sizeBytes }).returning();
+  res.status(201).json(row);
+});
+```
+
+---
+
+## `server/routes/pages.ts`
+```ts
+import { Router } from 'express';
+import { db } from '../db/index';
+import { pages, pageSections } from '../db/schema';
+import { requireRole } from '../middleware/auth';
+import { eq, like, asc } from 'drizzle-orm';
+
+export const pagesRouter = Router();
+
+pagesRouter.get('/', requireRole('admin'), async (req, res) => {
+  const q = String(req.query.q || '');
+  const rows = q
+    ? await db.select().from(pages).where(like(pages.slug, `%${q}%`))
+    : await db.select().from(pages);
+  res.json(rows);
+});
+
+pagesRouter.post('/', requireRole('admin'), async (req, res) => {
+  const { title, slug, template } = req.body;
+  const [row] = await db.insert(pages).values({ title, slug, template }).returning();
+  res.status(201).json(row);
+});
+
+pagesRouter.get('/:id', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  const [p] = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
+  const sections = await db.select().from(pageSections).where(eq(pageSections.pageId, id)).orderBy(asc(pageSections.sort));
+  res.json({ ...p, sections });
+});
+
+pagesRouter.put('/:id', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  const { title, slug, template, status, seo } = req.body;
+  await db.update(pages).set({ title, slug, template, status, seo }).where(eq(pages.id, id));
+  res.json({ ok: true });
+});
+
+pagesRouter.delete('/:id', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  await db.delete(pages).where(eq(pages.id, id));
+  res.json({ ok: true });
+});
+
+pagesRouter.post('/:id/sections', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.id);
+  const { type, sort, props } = req.body;
+  const [row] = await db.insert(pageSections).values({ pageId: id, type, sort, props }).returning();
+  res.status(201).json(row);
+});
+```
+
+---
+
+## `server/routes/menus.ts`
+```ts
+import { Router } from 'express';
+import { db } from '../db/index';
+import { menus, menuItems } from '../db/schema';
+import { requireRole } from '../middleware/auth';
+import { eq } from 'drizzle-orm';
+
+export const menusRouter = Router();
+
+menusRouter.get('/', requireRole('admin'), async (_req, res) => {
+  const data = await db.select().from(menus);
+  res.json(data);
+});
+
+menusRouter.post('/', requireRole('admin'), async (req, res) => {
+  const { handle, title } = req.body; 
+  const [row] = await db.insert(menus).values({ handle, title }).returning();
+  res.status(201).json(row);
+});
+
+menusRouter.post('/:id/items', requireRole('admin'), async (req, res) => {
+  const menuId = Number(req.params.id);
+  const { parentId, title, url, sort } = req.body;
+  const [row] = await db.insert(menuItems).values({ menuId, parentId, title, url, sort }).returning();
+  res.status(201).json(row);
+});
+
+menusRouter.put('/items/:itemId', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.itemId);
+  await db.update(menuItems).set(req.body).where(eq(menuItems.id, id));
+  res.json({ ok: true });
+});
+
+menusRouter.delete('/items/:itemId', requireRole('admin'), async (req, res) => {
+  const id = Number(req.params.itemId);
+  await db.delete(menuItems).where(eq(menuItems.id, id));
+  res.json({ ok: true });
+});
+```
+
+---
+
+## `server/routes/preview.ts`
+```ts
+import { Router } from 'express';
+import { signPreviewToken } from '../services/preview';
+import { requireRole } from '../middleware/auth';
+
+export const previewRouter = Router();
+
+previewRouter.get('/start', requireRole('admin'), (req: any, res) => {
+  const verId = Number(req.query.themeVersionId);
+  const token = signPreviewToken(verId, req.user.id);
+  res.json({ token });
+});
+```
+
+---
+
+## `server/index.ts`
+```ts
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middleware/errors';
+import { themesRouter } from './routes/themes';
+import { versionsRouter } from './routes/themeVersions';
+import { assetsRouter } from './routes/themeAssets';
+import { pagesRouter } from './routes/pages';
+import { menusRouter } from './routes/menus';
+import { previewRouter } from './routes/preview';
+
+const app = express();
+app.use(cors({ origin: process.env.ORIGIN, credentials: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
+
+// TODO: attach req.user via your auth middleware/session
+app.use('/api/themes', themesRouter);
+app.use('/api/themes', versionsRouter); // version endpoints under /api/themes/:themeId/...
+app.use('/api/themes', assetsRouter);   // assets under /api/themes/:verId/assets/...
+app.use('/api/pages', pagesRouter);
+app.use('/api/menus', menusRouter);
+app.use('/api/preview', previewRouter);
+
+app.use(errorHandler);
+
+const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`API running on ${port}`));
+```
+
+---
+
+# FRONTEND (React)
+
+## `web/src/lib/authGuard.tsx`
+```tsx
+import { useAuth } from '@/hooks/useAuth';
+import { Navigate } from 'wouter';
+
+export const withRole = (role: 'admin'|'creator'|'fan') => (Comp: any) => (props: any) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" />;
+  if (user.role !== role) return <Navigate to="/" />;
+  return <Comp {...props} />;
+};
+```
+
+---
+
+## `web/src/routes/AdminCMS.tsx` (Theme Studio Home)
+```tsx
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { withRole } from '@/lib/authGuard';
+import { Link } from 'wouter';
+
+function AdminCMS() {
+  const qc = useQueryClient();
+  const { data: themes } = useQuery({ queryKey: ['/api/themes'] });
+  const create = useMutation({
+    mutationFn: async () => fetch('/api/themes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'New Theme' }) }).then(r=>r.json()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['/api/themes'] })
+  });
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Theme Studio</h1>
+        <Button onClick={()=>create.mutate()}>Create Theme</Button>
+      </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {themes?.map((t: any)=> (
+          <Card key={t.id}>
+            <CardHeader>
+              <CardTitle>{t.name}{t.isActive && ' (Active)'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link href={`/admin/cms/editor?themeId=${t.id}`}><Button className="w-full">Open in Editor</Button></Link>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+export default withRole('admin')(AdminCMS);
+```
+
+---
+
+## `web/src/components/cms/SettingsForm.tsx`
+```tsx
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+
+export default function SettingsForm({ value, onChange }: { value: any; onChange: (v:any)=>void }){
+  const v = value || {};
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label>Primary</Label>
+        <Input value={v.colors?.primary || 'hsl(0,100%,50%)'} onChange={e=>onChange({ ...v, colors: { ...v.colors, primary: e.target.value } })} />
+      </div>
+      <div>
+        <Label>Secondary</Label>
+        <Input value={v.colors?.secondary || 'hsl(45,80%,60%)'} onChange={e=>onChange({ ...v, colors: { ...v.colors, secondary: e.target.value } })} />
+      </div>
+      <div>
+        <Label>Display Font</Label>
+        <Input value={v.typography?.fontDisplay || 'Orbitron'} onChange={e=>onChange({ ...v, typography: { ...v.typography, fontDisplay: e.target.value } })} />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Glow Enabled</Label>
+        <Switch checked={!!v.effects?.glowEnabled} onCheckedChange={c=>onChange({ ...v, effects: { ...v.effects, glowEnabled: c } })} />
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## `web/src/components/cms/PageTable.tsx`
+```tsx
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+
+export default function PageTable(){
+  const [q, setQ] = useState('');
+  const { data } = useQuery({ queryKey: ['/api/pages', q], queryFn: ()=>fetch(`/api/pages?q=${encodeURIComponent(q)}`).then(r=>r.json()) });
+  return (
+    <div>
+      <div className="flex gap-2 mb-2"><Input placeholder="Search pages" value={q} onChange={e=>setQ(e.target.value)} /><Button onClick={()=>setQ('')}>Clear</Button></div>
+      <div className="space-y-2">
+        {data?.map((p:any)=> (
+          <div key={p.id} className="p-3 border rounded flex items-center justify-between">
+            <div>
+              <div className="font-medium">{p.title}</div>
+              <div className="text-xs text-muted-foreground">/{p.slug}</div>
+            </div>
+            <Button variant="outline">Edit</Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## `web/src/components/cms/MenuEditor.tsx`
+```tsx
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+
+export default function MenuEditor(){
+  const { data } = useQuery({ queryKey: ['/api/menus'] });
+  return (
+    <div className="space-y-2">
+      {(data||[]).map((m:any)=> (
+        <div key={m.id} className="p-3 border rounded">
+          <div className="font-medium">{m.title} ({m.handle})</div>
+          <Button size="sm" className="mt-2">Add Item</Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+## `web/src/components/cms/AssetBrowser.tsx`
+```tsx
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+export default function AssetBrowser({ versionId }: { versionId: number }){
+  const [file, setFile] = useState<File|null>(null);
+  async function upload(){
+    if (!file) return;
+    const presign = await fetch(`/api/themes/${versionId}/assets/presign`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ path: file.name, mime: file.type })}).then(r=>r.json());
+    await fetch(presign.uploadUrl, { method:'PUT', headers:{ 'Content-Type': file.type }, body: file });
+    await fetch(`/api/themes/${versionId}/assets/complete`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ path: file.name, storageKey: presign.key, mime: file.type, sizeBytes: file.size }) });
+    alert('Uploaded');
+  }
+  return (
+    <div className="space-y-2">
+      <input type="file" onChange={e=>setFile(e.target.files?.[0]||null)} />
+      <Button onClick={upload} disabled={!file}>Upload</Button>
+    </div>
+  );
+}
+```
+
+---
+
+## `web/src/components/cms/PreviewFrame.tsx`
+```tsx
+export default function PreviewFrame({ versionId }: { versionId: number }){
+  // For now just point to public site with preview flag; backend should verify token.
+  const url = `/?preview=1&themeVersion=${versionId}`; // add token when /api/preview/start implemented
+  return <iframe className="w-full h-[70vh] rounded border" src={url} />;
+}
+```
+
+---
+
+## `web/src/routes/AdminCMSEditor.tsx`
+```tsx
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useSearch } from 'wouter';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import SettingsForm from '@/components/cms/SettingsForm';
+import PageTable from '@/components/cms/PageTable';
+import MenuEditor from '@/components/cms/MenuEditor';
+import AssetBrowser from '@/components/cms/AssetBrowser';
+import PreviewFrame from '@/components/cms/PreviewFrame';
+import { withRole } from '@/lib/authGuard';
+
+function AdminCMSEditor(){
+  const qs = new URLSearchParams(useSearch());
+  const themeId = Number(qs.get('themeId'));
+  const qc = useQueryClient();
+
+  const { data: versions } = useQuery({ queryKey: ['/api/themes', themeId, 'versions'], queryFn: ()=>fetch(`/api/themes/${themeId}/versions`).then(r=>r.json()) });
+  const activeVer = versions?.[0];
+  const { data: settings } = useQuery({ enabled: !!activeVer, queryKey: ['/api/themeVersion', activeVer?.id, 'settings'], queryFn: ()=>fetch(`/api/themes/${activeVer.id}/settings`).then(r=>r.json()) });
+
+  const saveSettings = useMutation({
+    mutationFn: async (payload:any) => fetch(`/api/themes/${activeVer.id}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }),
+    onSuccess: ()=> qc.invalidateQueries({ queryKey: ['/api/themeVersion', activeVer?.id, 'settings'] })
+  });
+
+  const publish = useMutation({
+    mutationFn: async () => fetch(`/api/themes/${themeId}/versions/${activeVer.id}/publish`, { method:'POST' }),
+  });
+
+  if (!activeVer) return <div className="p-6">No versions found.</div>
+
+  return (
+    <div className="space-y-4 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Theme Editor – v{activeVer.label}</h1>
+        <div className="flex gap-2">
+          <Button onClick={()=>publish.mutate()}>Publish</Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="settings">
+        <TabsList>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
+          <TabsTrigger value="menus">Menus</TabsTrigger>
+          <TabsTrigger value="assets">Assets</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings">
+          <Card><CardContent className="pt-6">
+            <SettingsForm value={settings} onChange={(v)=>saveSettings.mutate(v)} />
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="pages"><Card><CardContent className="pt-6"><PageTable /></CardContent></Card></TabsContent>
+        <TabsContent value="menus"><Card><CardContent className="pt-6"><MenuEditor /></CardContent></Card></TabsContent>
+        <TabsContent value="assets"><Card><CardContent className="pt-6"><AssetBrowser versionId={activeVer.id} /></CardContent></Card></TabsContent>
+        <TabsContent value="preview"><PreviewFrame versionId={activeVer.id} /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export default withRole('admin')(AdminCMSEditor);
+```
+
+---
+
+## Notes
+- Hook the **ThemeManager** list cards with a button: `Open in Editor` → `/admin/cms/editor?themeId=<id>`.
+- Replace the placeholder auth with your real `useAuth()` + server session/JWT.
+- Add a simple public renderer that consumes the **active theme** + **theme settings** and injects CSS vars.
+
+That’s the complete CMS + Theme Studio backbone. Plug it in, set env vars, and you’ve got a Shopify-like admin to control BoyFanz themes and pages from inside your Admin panel.

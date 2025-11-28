@@ -1,0 +1,95 @@
+Features:
+
+Built with Laravel 12
+Subscription system
+Stripe Connect
+Live Streaming
+Live Streaming Private
+Video Calls
+Audio Calls
+Reels / Shorts
+Stories
+Coconut Video Encoding service
+Scheduled posts
+Creators can send welcome messages with video, photo, audio to new subscribers, and set a price
+Push Notifications
+Users can set the monthly subscription price
+Multiple file uploads in one post and Message Chat
+Creator can send message to all its subscribers at the same time (Mass Messages)
+Bootstrap
+Implemented GDPR
+Banner Cookies Policy
+Strong Customer Authentication (SCA) in stripe for customers with business in Europe.
+Dashboard with Statistics and balance of your account
+Storage (Local, Amazon, DigitalOcean, Wasabi, Backblaze B2, Vultr, Cloudflare, iDrive and Pushr)
+Notifications Real-time
+Online / offline user
+Google reCAPTCHA
+Edit your page (profile)
+Account verification by uploading ID or Passport
+Verified users will display a badge
+Create unlimited posts Free and Premium
+Creators can change their name, username and password
+Creators manage their posts
+Feed from recent posts of creators subscribed
+Infinite scroll
+Categories
+SEO on Pages
+SEO on Categories
+Upload Avatar
+Upload Cover
+Setting your Payout method (PayPal or Bank Transfer)
+Make withdrawals when you reach the minimum amount established by admin
+Search creators by Name/Username, categories and filter by featured and new
+Integration with PayPal (Recurrent)
+Integration with Stripe with (SCA) (Recurrent)
+Creators Featured
+Social Login with Facebook and Google
+Email Verification
+Users can like in posts
+Users can comment on posts
+Ajax Comments
+Upload Photos
+GIF Animated
+Upload Videos MP4/MOV (quicktime)
+Upload Audio MP3
+Social profiles
+Sending mail to the user when a withdrawal payment is sent.
+You can report posts and creators
+Current balance of the creator in the drop-down menu
+XSS: Protection from cross site scripting
+Secure Bcrypt password hashing
+SMTP Support
+Share your page URL (Profile) or share on Facebook and Twitter
+Easy translation
+Multilanguage
+Option Delete Account
+Link to @username and #hashtag on posts and comments
+Progress bar on Upload
+Message system with creators, they can send photos, videos and audios
+Infinite scroll on Message system
+Creator can edit posts and replace Media
+Lazyload Images
+History of payments made and received
+Sitemap
+Email notifications (New subscriber, Tips, PPV)
+Blog
+Contact us page
+Invoices for payments made
+Admin Features:
+
+Set General Settings (Name Site,Keywords,Currency Position,others)
+Change Logo/Favicon/Avatar Default/Images on Index
+Manage Subscriptions
+Accept / reject, ID verifications
+Create/Update/Delete Categories
+View/Delete Reports
+View/Pay Withdrawals
+Add code Google Analytics
+Update/Delete Members
+Create/Update/Delete Pages
+Set Payment Settings
+Set Profiles Social
+Set limits (Auto approve Post, File size allowed, etc)
+Statistics
+Maintenance mode

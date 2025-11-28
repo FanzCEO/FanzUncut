@@ -1,0 +1,208 @@
+
+> rest-express@1.0.0 dev
+⚠️  No environment file found. Checked:x.ts
+   - /home/runner/workspace/env/.env.local
+   - /home/runner/workspace/.env.local
+   - /home/runner/workspace/.env
+   Using system environment variables only.
+❌ Missing required environment variables:
+   - JWT_SECRET
+   - PORT
+🔧 Setting development defaults...
+   - JWT_SECRET: <development default>
+   - PORT: 5000
+❌ Database connection failed: require is not defined
+🔧 Using mock database for development
+ℹ️ VAPID keys not configured - Push notifications disabled. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables to enable.
+🔒 Initialized 12 adult-friendly payment processors
+✅ Adult-Friendly Payment Service initialized
+🤖 Initializing AI recommendation engine
+📚 Loading AI recommendation models
+⚠️  Generated new DRM encryption key. Store securely: e7d7cea3fec81ed5dfdb5bb688fe67ec227a3490f2b3201aaacc2a03412861d8
+🔄 Real-time sync service started
+🔌 WebSocket server would start on port 3001
+👤 Initializing user behavior patterns
+📊 Starting background trend analysis
+✅ AI recommendation engine initialized
+file:///home/runner/workspace/node_modules/zod/v3/types.js:39
+                const error = new ZodError(ctx.common.issues);
+                              ^
+
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "rateLimiting"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "authentication"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "loadBalancing"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "circuitBreaker"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "logging"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "caching"
+    ],
+    "message": "Required"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "object",
+    "received": "undefined",
+    "path": [
+      "monitoring"
+    ],
+    "message": "Required"
+  }
+]
+    at get error [as error] (file:///home/runner/workspace/node_modules/zod/v3/types.js:39:31)
+    at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/v3/types.js:114:22)
+    at <anonymous> (/home/runner/workspace/server/services/apiGatewayService.ts:1149:50)
+    at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  issues: [
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'rateLimiting' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'authentication' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'loadBalancing' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'circuitBreaker' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'logging' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'caching' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'monitoring' ],
+      message: 'Required'
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'rateLimiting' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'authentication' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'loadBalancing' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'circuitBreaker' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'logging' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'caching' ],
+      message: 'Required'
+    },
+    {
+      code: 'invalid_type',
+      expected: 'object',
+      received: 'undefined',
+      path: [ 'monitoring' ],
+      message: 'Required'
+    }
+  ]
+}
+
+Node.js v20.19.3

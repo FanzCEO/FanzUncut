@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fanz-ecosystem
+  labels:
+    name: fanz-ecosystem
+    environment: production

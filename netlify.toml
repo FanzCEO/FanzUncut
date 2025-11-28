@@ -1,0 +1,117 @@
+# BoyFanz Netlify Deployment Configuration
+# Generated: 2025-11-02
+
+[build]
+  # Build command to run before deployment
+  command = "npm run build"
+
+  # Directory to publish - contains the built static assets
+  publish = "dist/public"
+
+  # Node.js version to use for build
+  [build.environment]
+    NODE_VERSION = "20.19.5"
+    NPM_VERSION = "10.9.0"
+
+# API endpoint redirects
+# Route all /api/* requests to Netlify Functions (if using serverless functions)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback redirect
+# All other requests should serve index.html (client-side routing)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Development server configuration
+[dev]
+  command = "npm run dev"
+  port = 5000
+  targetPort = 5173
+  publish = "dist/public"
+  autoLaunch = false
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Content Security Policy
+    # Note: Customize this based on your actual content sources
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.stripe.com https://*.supabase.co"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache images
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Don't cache HTML files
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Environment variables (production)
+# Set these in Netlify dashboard under Site settings > Environment variables
+# Required:
+# - DATABASE_URL (PostgreSQL connection string)
+# - JWT_SECRET
+# - SESSION_SECRET
+#
+# Optional:
+# - RESEND_API_KEY (for email)
+# - STRIPE_SECRET_KEY (for payments)
+# - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET (for file uploads)
+# - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (OAuth)
+# - DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET (OAuth)
+# - SENTRY_DSN (error tracking)
+
+# Functions configuration (if using Netlify Functions for serverless API)
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Plugin configuration
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  # Lighthouse configuration
+  [plugins.inputs.thresholds]
+    performance = 0.7
+    accessibility = 0.9
+    best-practices = 0.8
+    seo = 0.9
+
+# Build plugins for optimization
+[[plugins]]
+  package = "netlify-plugin-cache"
+
+  [plugins.inputs]
+    # Cache node_modules for faster builds
+    paths = ["node_modules", ".cache"]

@@ -1,0 +1,154 @@
+Subscription system
+Stripe Connect
+Live Streaming
+Live Streaming Private
+Video Calls
+Audio Calls
+Reels / Shorts
+Stories
+Coconut Video Encoding service
+Scheduled posts
+Creators can send welcome messages with video, photo, audio to new subscribers, and set a price
+Push Notifications
+Users can set the monthly subscription price
+Multiple file uploads in one post and Message Chat
+Creator can send message to all its subscribers at the same time (Mass Messages)
+Bootstrap
+Implemented GDPR
+Banner Cookies Policy
+Strong Customer Authentication (SCA) in stripe for customers with business in Europe.
+Dashboard with Statistics and balance of your account
+Storage (Local, Amazon, DigitalOcean, Wasabi, Backblaze B2, Vultr, Cloudflare, iDrive and Pushr)
+Notifications Real-time
+Online / offline user
+Google reCAPTCHA
+Edit your page (profile)
+Account verification by uploading ID or Passport
+Verified users will display a badge
+Create unlimited posts Free and Premium
+Creators can change their name, username and password
+Creators manage their posts
+Feed from recent posts of creators subscribed
+Infinite scroll
+Categories
+SEO on Pages
+SEO on Categories
+Upload Avatar
+Upload Cover
+Setting your Payout method (PayPal or Bank Transfer)
+Make withdrawals when you reach the minimum amount established by admin
+Search creators by Name/Username, categories and filter by featured and new
+Integration with PayPal (Recurrent)
+Integration with Stripe with (SCA) (Recurrent)
+Creators Featured
+Social Login with Facebook and Google
+Email Verification
+Users can like in posts
+Users can comment on posts
+Ajax Comments
+Upload Photos
+GIF Animated
+Upload Videos MP4/MOV (quicktime)
+Upload Audio MP3
+Social profiles
+Sending mail to the user when a withdrawal payment is sent.
+You can report posts and creators
+Current balance of the creator in the drop-down menu
+XSS: Protection from cross site scripting
+Secure Bcrypt password hashing
+SMTP Support
+Share your page URL (Profile) or share on Facebook and Twitter
+Easy translation
+Multilanguage
+Option Delete Account
+Link to @username and #hashtag on posts and comments
+Progress bar on Upload
+Message system with creators, they can send photos, videos and audios
+Infinite scroll on Message system
+Creator can edit posts and replace Media
+Lazyload Images
+History of payments made and received
+Sitemap
+Email notifications (New subscriber, Tips, PPV)
+Blog
+Contact us page
+Invoices for payments made
+Admin Features:
+
+Set General Settings (Name Site,Keywords,Currency Position,others)
+Change Logo/Favicon/Avatar Default/Images on Index
+Manage Subscriptions
+Accept / reject, ID verifications
+Create/Update/Delete Categories
+View/Delete Reports
+View/Pay Withdrawals
+Add code Google Analytics
+Update/Delete Members
+Create/Update/Delete Pages
+Set Payment Settings
+Set Profiles Social
+Set limits (Auto approve Post, File size allowed, etc)
+Statistics
+Maintenance mode
+Requirements:
+
+PHP 8.2 or Greater
+MySQL 5.7 or Mariadb 10.3.17
+Ctype PHP Extension
+cURL PHP Extension
+DOM PHP Extension
+Fileinfo PHP Extension
+Filter PHP Extension
+Hash PHP Extension
+Mbstring PHP Extension
+OpenSSL PHP Extension
+PCRE PHP Extension
+PDO PHP Extension
+Session PHP Extension
+Tokenizer PHP Extension
+XML PHP Extension
+GD or Imagick
+EXIF
+allow_url_fopen (PHP.INI) is ON
+FFMPEG
+More items by Miguel_Vasquez
+
+Coinbase Payment Gateway for Gostock - CodeCanyon Item for Sale
+Flutterwave Payment Gateway for Gostock - CodeCanyon Item for Sale
+Coinpayments Payment Gateway for Gostock - CodeCanyon Item for Sale
+Instamojo Payment Gateway for GoStock - CodeCanyon Item for Sale
+Bulk Upload for GoStock - CodeCanyon Item for Sale
+Razorpay Payment Gateway for GoStock - CodeCanyon Item for Sale
+Paystack Payment Gateway for GoStock - CodeCanyon Item for Sale
+View author portfolio
+
+Regular License
+$199
+ Included: Quality checked by Envato
+ Included: Future updates
+ Included: 6 months support from Miguel_Vasquez  
+
+Extend support to 12 months
+$169.75
+$72.75
+ Add to Cart
+Price is in US dollars and excludes tax and handling fees
+Featured item
+This item was featured on CodeCanyon
+Elite author
+Elite Author
+Miguel_Vasquez
+Miguel_Vasquez
+
+Venezuela, Bolivarian Republic of Elite Author Author Level 9 Featured Author Featured Item Trendsetter Weekly Top Seller Exclusive Author Affiliate Level 2 Community Health Milestone Member 14 Years of Membership
+View Portfolio
+Last Update	19 September 2025
+Compatible Browsers	IE11, Firefox, Safari, Opera, Chrome, Edge
+Files Included	JavaScript JS, CSS, PHP, SQL
+Software Framework	Laravel
+Software Version	PHP 8.x, MySQL 5.x
+Tags	audio calls, Cardinity, ccbill, content premium, creators, donation script, live streaming, onlyfans, onlyfans clone, patreon, sponzy, stripe, subscriptions, support, video calls
+Created	5 years ago
+More Attributes 
+© All Rights Reserved Miguel_Vasquez
+Contact the Envato Market Help Team

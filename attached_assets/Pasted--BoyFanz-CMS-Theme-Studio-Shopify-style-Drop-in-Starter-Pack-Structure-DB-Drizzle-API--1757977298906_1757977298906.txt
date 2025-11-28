@@ -1,0 +1,238 @@
+# BoyFanz CMS + Theme Studio (Shopify-style) – Drop-in Starter Pack
+
+> Structure, DB (Drizzle), API (Express + Zod), S3 assets, Preview/Publish service, and Admin UI (React + shadcn). Paste these into your repo on Replit. Replace placeholders (e.g., bucket names) in `.env`.
+
+---
+
+## File tree (suggested)
+
+```
+server/
+  index.ts
+  db/
+    index.ts
+    schema.ts
+  middleware/
+    auth.ts
+    errors.ts
+  services/
+    s3.ts
+    publish.ts
+    preview.ts
+  routes/
+    themes.ts
+    themeVersions.ts
+    themeAssets.ts
+    pages.ts
+    menus.ts
+    preview.ts
+web/
+  src/lib/authGuard.tsx
+  src/routes/AdminCMS.tsx
+  src/routes/AdminCMSEditor.tsx
+  src/components/cms/SettingsForm.tsx
+  src/components/cms/PageTable.tsx
+  src/components/cms/MenuEditor.tsx
+  src/components/cms/AssetBrowser.tsx
+  src/components/cms/PreviewFrame.tsx
+```
+
+---
+
+## `server/db/schema.ts`
+```ts
+import { pgTable, serial, integer, text, boolean, timestamp, jsonb, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
+
+export const verStatus = pgEnum('ver_status', ['draft','published','archived']);
+export const pageStatus = pgEnum('page_status', ['draft','published']);
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  role: text('role').notNull(), // 'fan' | 'creator' | 'admin'
+  status: text('status').default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => ({ emailIdx: uniqueIndex('users_email_idx').on(t.email) }));
+
+export const themes = pgTable('themes', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const themeVersions = pgTable('theme_versions', {
+  id: serial('id').primaryKey(),
+  themeId: integer('theme_id').references(() => themes.id).notNull(),
+  label: text('label').default('v1').notNull(),
+  status: verStatus('status').default('draft').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const themeSettings = pgTable('theme_settings', {
+  id: serial('id').primaryKey(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  json: jsonb('json').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const themeAssets = pgTable('theme_assets', {
+  id: serial('id').primaryKey(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  path: text('path').notNull(),
+  storageKey: text('storage_key').notNull(),
+  mime: text('mime'),
+  sizeBytes: integer('size_bytes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const pages = pgTable('pages', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull(),
+  title: text('title').notNull(),
+  template: text('template').default('page').notNull(),
+  status: pageStatus('status').default('draft').notNull(),
+  seo: jsonb('seo').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => ({ slugIdx: uniqueIndex('pages_slug_idx').on(t.slug) }));
+
+export const pageSections = pgTable('page_sections', {
+  id: serial('id').primaryKey(),
+  pageId: integer('page_id').references(() => pages.id).notNull(),
+  type: text('type').notNull(),
+  sort: integer('sort').notNull(),
+  props: jsonb('props').default({}).notNull(),
+});
+
+export const menus = pgTable('menus', {
+  id: serial('id').primaryKey(),
+  handle: text('handle').notNull(),
+  title: text('title').notNull(),
+}, (t) => ({ handleIdx: uniqueIndex('menus_handle_idx').on(t.handle) }));
+
+export const menuItems = pgTable('menu_items', {
+  id: serial('id').primaryKey(),
+  menuId: integer('menu_id').references(() => menus.id).notNull(),
+  parentId: integer('parent_id'),
+  title: text('title').notNull(),
+  url: text('url').notNull(),
+  sort: integer('sort').default(0),
+});
+
+export const publishes = pgTable('publishes', {
+  id: serial('id').primaryKey(),
+  actorId: integer('actor_id').references(() => users.id).notNull(),
+  themeVersionId: integer('theme_version_id').references(() => themeVersions.id).notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const auditLogs = pgTable('audit_logs', {
+  id: serial('id').primaryKey(),
+  actorId: integer('actor_id').references(() => users.id).notNull(),
+  action: text('action').notNull(),
+  entity: text('entity').notNull(),
+  entityId: integer('entity_id').notNull(),
+  meta: jsonb('meta').default({}).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+```
+
+---
+
+## `server/db/index.ts`
+```ts
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle(pool);
+```
+
+---
+
+## `server/middleware/auth.ts`
+```ts
+import { Request, Response, NextFunction } from 'express';
+
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  // Replace with your real auth (session/JWT). For now assume req.user is set.
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
+export function requireRole(...roles: string[]) {
+  return (req: any, res: any, next: any) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Forbidden' });
+    next();
+  };
+}
+```
+
+---
+
+## `server/middleware/errors.ts`
+```ts
+import { NextFunction, Request, Response } from 'express';
+export function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction) {
+  console.error(err);
+  res.status(err.status || 500).json({ error: err.message || 'Server error' });
+}
+```
+
+---
+
+## `server/services/s3.ts`
+```ts
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+export const s3 = new S3Client({
+  region: process.env.THEME_S3_REGION,
+  credentials: {
+    accessKeyId: process.env.THEME_S3_KEY!,
+    secretAccessKey: process.env.THEME_S3_SECRET!,
+  },
+});
+
+const bucket = process.env.THEME_S3_BUCKET!;
+
+export async function presignThemeAsset(key: string, mime: string) {
+  const cmd = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: mime });
+  const url = await getSignedUrl(s3, cmd, { expiresIn: 60 * 5 });
+  return { uploadUrl: url, key };
+}
+```
+
+---
+
+## `server/services/preview.ts`
+```ts
+import jwt from 'jsonwebtoken';
+const secret = process.env.PREVIEW_JWT_SECRET!;
+
+export function signPreviewToken(versionId: number, userId: number) {
+  return jwt.sign({ v: versionId, uid: userId, preview: true }, secret, { expiresIn: '30m' });
+}
+export function verifyPreviewToken(token: string) {
+  return jwt.verify(token, secret) as any;
+}
+```
+
+---
+
+## `server/services/publish.ts`
+```ts
+import { db } from '../db/index';
+import { themes, themeVersions, publishes } from '../db/schema';
+import { eq } from 'drizzle-orm';
+
+export async function publishThemeVersion({ themeId, versionId, actorId }: { themeId: number; versionId: number; actorId: number; }) {
+  // Mark all versions of theme as archived except the one being published
+  await db.update(themeVersions).set({ status: 'archived' as any }).where(eq(themeVersions.themeId, themeId));
+  await db.update(themeVersions).set({ status: 'published' as any }).where(eq(themeVersions.id, versionId));
+  await db.update(themes).set({ isActive: true }).where(eq(themes.i

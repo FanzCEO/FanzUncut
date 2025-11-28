@@ -1,0 +1,204 @@
+Last Prompt for Replit	
+
+Replit AI to build an app end-to-end (architecture, code, configs, connections, docs). It’s Replit-compatible (no Docker/Laravel/blocked stacks), creator-economy ready, and tuned for FANZ standards (no Stripe/PayPal references, 2257/VerifyMy, audit logs, SSO-ready).
+
+⸻
+
+🧠 Replit End-to-End Build Prompt (Template)
+
+You are a senior staff engineer inside Replit. Build the full application end-to-end using the constraints and specs below. Do not ask clarifying questions—make sensible defaults, implement working code, and ship. Produce runnable code, seeds, tests, and docs. Use Replit Secrets for all credentials. Avoid any blocked tech (no Laravel, no Docker).
+
+0) Project Identity
+	•	Product Name: <<<Fanz>>>
+	•	Brand Theme: Neon/Varsity aesthetic (clean, accessible UI, dark mode default).
+	•	Owner: FANZ (FANZ)
+	•	Primary Domain (future): <<<APP_DOMAIN>>> (Replit-hosted preview now)
+
+1) Replit-Compatible Tech Stack (Hard Requirements)
+	•	Frontend: React 18 + TypeScript + Vite, TailwindCSS, Radix UI + shadcn/ui, TanStack Query, Wouter (routing).
+	•	Backend: Node.js (Express + TypeScript), Zod for validation, WebSocket (ws) for realtime.
+	•	DB: PostgreSQL (Neon). Use Drizzle ORM + drizzle-kit migrations.
+	•	Storage: S3-compatible (Wasabi/MojoHost S3). Use @aws-sdk/client-s3.
+	•	Auth: Email+password with OTP fallback, session cookies + JWT (access/refresh) using jose.
+	•	Queue/Jobs: In-process worker with BullMQ-lite (Redis optional: if Redis not available, implement in-memory fallback with persistence table).
+	•	Search: Postgres full-text (tsvector).
+	•	Docs: /docs with a generated OpenAPI (ts-to-OpenAPI) + Redocly UI.
+	•	Tests: Vitest (frontend/back), Playwright (E2E happy path).
+	•	Lint/Format: ESLint + Prettier. Commit hooks via simple npm script (no Husky needed in Replit).
+
+2) Core Platform Features (Build Now)
+	1.	SSO-Ready Identity Layer
+	•	Users: fans, creators, admins.
+	•	Device/session table, refresh token rotation, IP/UA capture.
+	•	Role-based routes and UI guards.
+	2.	KYC/Compliance
+	•	VerifyMy integration stubs: REST client, webhook receiver /webhooks/verifymy.
+	•	18 U.S.C. §2257 metadata tables (performer records, custodians, IDs, consent forms).
+	•	Audit log for every moderation/review action.
+	3.	Payments/Payouts (Abstracted)
+	•	Do NOT use Stripe/PayPal.
+	•	Create a clean payments/ service with adapters, test with a MockPayoutsProvider.
+	•	Payout requests, statuses, export CSV.
+	4.	Media Pipeline
+	•	S3 upload (presigned), object lifecycle tags, checksum, optional forensic watermark flag.
+	•	Image/thumbnail worker (sharp).
+	5.	Realtime
+	•	WebSocket: presence, notifications, live system toasts.
+	6.	Moderation / FanzDash Hooks
+	•	Submission queue → human review → approve/reject → status chips + toasts.
+	•	Policy engine placeholder (OPA-style JSON rules table) + Zod guards server-side.
+	7.	Settings & Team
+	•	Profile, 2FA (TOTP), API keys (scoped), webhooks (per-tenant).
+	8.	Observability
+	•	Request/response logging (pino), per-user action audit, error boundary UI, health check /healthz.
+
+3) Pages & Routes
+
+Frontend Routes
+	•	/ (Landing: value prop, CTA)
+	•	/auth/* (login, register, OTP, reset)
+	•	/dashboard (role-aware)
+	•	/media (list, upload, status, moderation chips)
+	•	/compliance (KYC state, 2257 docs, webhooks log)
+	•	/payouts (balance, requests, history)
+	•	/admin/approvals (queue, review UI, bulk actions)
+	•	/settings (profile, 2FA, API keys, webhooks)
+
+API (Express)
+	•	/api/auth/* (register/login/refresh/logout/otp)
+	•	/api/users/me
+	•	/api/media/* (presign, create, update status)
+	•	/api/moderation/* (queue, decide, audit)
+	•	/api/compliance/* (kyc status, forms, files)
+	•	/api/payouts/* (request, list, export)
+	•	/webhooks/verifymy (KYC)
+	•	/healthz /version /docs
+
+Generate OpenAPI JSON at /docs/openapi.json and serve Redoc at /docs.
+
+4) Data Model (Drizzle)
+
+Create migrations and seeders for:
+	•	users (id, email, password_hash, role, status, created_at, updated_at)
+	•	sessions (id, user_id, refresh_token_hash, expires_at, ip, ua)
+	•	profiles (user_id FK, display_name, bio, avatar_url, public_flags)
+	•	kyc_verifications (user_id, provider=‘verifymy’, external_id, status, data_json)
+	•	records_2257 (id, user_id, doc_type, s3_key, checksum, created_at)
+	•	media_assets (id, owner_id, title, description, s3_key, mime, size, checksum, status, flags_json, created_at)
+	•	moderation_queue (id, media_id, reason, status, reviewer_id, notes, decided_at)
+	•	audit_logs (id, actor_id, action, target_type, target_id, diff_json, created_at)
+	•	payout_accounts (id, user_id, provider, account_ref, status)
+	•	payout_requests (id, user_id, amount_cents, currency, status, provider_ref, created_at)
+	•	webhooks (id, user_id, url, secret, events_json, status)
+	•	api_keys (id, user_id, key_hash, scopes, created_at, last_used_at)
+	•	notifications (id, user_id, kind, payload_json, read_at, created_at)
+
+Add indexes for email, status fields, full-text on media_assets(title, description).
+
+5) Environment & Secrets (Replit → Tools → Secrets)
+
+Create and read these keys:
+
+DATABASE_URL=postgres://...        # Neon
+S3_ENDPOINT=<<<S3_ENDPOINT>>>
+S3_REGION=<<<S3_REGION>>>
+S3_BUCKET=<<<S3_BUCKET>>>
+S3_ACCESS_KEY_ID=<<<...>>>
+S3_SECRET_ACCESS_KEY=<<<...>>>
+JWT_ISS=FANZ.app
+JWT_AUD=FANZ.clients
+JWT_ACCESS_TTL=900              # 15m
+JWT_REFRESH_TTL=2592000         # 30d
+JWT_SECRET=<<<random-64b>>>
+OTP_EMAIL_FROM=noreply@<<<domain>>>
+VERIFYMY_API_URL=<<<...>>>
+VERIFYMY_API_KEY=<<<...>>>
+WEB_APP_URL=http://localhost:3000
+API_URL=http://localhost:5173/api
+NODE_ENV=development
+
+6) Implementation Tasks (Do All)
+	1.	Scaffold monorepo-style folders:
+
+/app
+  /frontend  (Vite React TS)
+  /backend   (Express TS)
+  /packages
+    /config  (shared tsconfig, eslint)
+    /ui      (shared UI tokens/components)
+    /types   (Zod schemas, OpenAPI gen)
+
+	2.	Configure Tailwind + shadcn/ui; set theme tokens (neon/varsity).
+	3.	Build auth flows (register/login/refresh/OTP) + frontend forms with Zod + RHF.
+	4.	KYC: implement VerifyMy client, webhooks verifier (HMAC), KYC status card in UI.
+	5.	S3 uploads: backend presign route; frontend uploader with progress + retries.
+	6.	Moderation queue UI with status chips, reviewer notes, toasts, audit logs.
+	7.	Payouts: request form → queue → mock provider adapter → status updates + CSV export.
+	8.	Notifications: WebSocket gateway; client subscribe; toast + inbox page.
+	9.	Compliance: 2257 upload and listing; link to users.
+	10.	Observability: pino logger, request id middleware, error handler, /healthz.
+	11.	Tests:
+
+	•	Vitest: auth, media presign, moderation decisions, payouts mock.
+	•	Playwright: signup→kyc stub→upload→submit→admin approve→visible in list.
+
+	12.	Docs: generate OpenAPI from Zod; serve Redoc; add “Try It” examples.
+
+7) Security & Compliance (Must)
+	•	Rate limiting (IP + user id) on auth, uploads, webhooks.
+	•	CSRF protection for cookie endpoints; CORS locked to WEB_APP_URL.
+	•	Hash refresh tokens; rotate on each use; revoke on suspicion.
+	•	Validate all payloads with Zod; never trust client flags.
+	•	Webhooks: verify signatures; store raw event in audit_logs.
+
+8) NPM Scripts
+
+Backend
+	•	dev: tsx watch server
+	•	build: tsc
+	•	start: node dist/index.js
+	•	migrate: drizzle-kit migrate
+	•	studio: drizzle-kit studio
+	•	test: vitest run
+	•	seed: tsx scripts/seed.ts
+
+Frontend
+	•	dev: vite
+	•	build: vite build
+	•	preview: vite preview
+	•	test: vitest run
+
+9) Deliverables
+	•	Running frontend & backend in Replit.
+	•	DB migrations + seed.
+	•	Working upload → moderation → approve flow.
+	•	KYC webhook demo endpoint + test event recorder.
+	•	Payout request mock end-to-end.
+	•	OpenAPI docs and a terse README.md (setup/run/ENV, feature list, routes, test commands).
+	•	Exportable .env.example (without secrets).
+
+10) Acceptance Tests (must pass)
+	•	New creator can sign up, complete KYC (stub), upload media, submit for approval, get approved, and see live status.
+	•	Admin can review queue, approve/reject, see audit trail.
+	•	Payout request can be created and status flows to “paid (mock)”.
+	•	Notifications arrive over WebSocket.
+	•	All protected routes require auth; rate limits enforced.
+
+Start building now. Create files, write code, run migrations, seed, and output final run instructions at the end.
+
+⸻
+
+🔧 Filled Example (FanzRadioPod variant)
+
+If the target is FanzRadioPod (live radio + podcast CMS), add these to the same prompt:
+	•	Extra Features: Live rooms (WebRTC via LiveKit Cloud SDK; use client tokens via backend), schedule calendar, episode manager, HLS recording (server-side stub; mark TODO if HLS not feasible on Replit), listener chat (WebSocket).
+	•	Extra Tables: stations, shows, episodes, playlists, schedule_slots, live_sessions, listeners, chat_messages.
+	•	Extra Routes: /api/livekit/token, /api/shows/*, /api/episodes/*, /api/playlists/*, /api/chat/*.
+	•	UI: /live (go live panel), /schedule, /episodes, /analytics (basic charts from aggregated tables).
+	•	Storage: audio to S3; generate waveform PNG + duration metadata worker.
+
+Append these lines under 6) Implementation Tasks:
+	•	Integrate LiveKit (no Docker): token mint route; frontend LiveKit React components.
+	•	Build show scheduler with drag-drop (dnd-kit) + ICS export.
+	•	Episode publishing: upload, cover art, S3, public share page /e/:slug.
+	•	Minimal analytics: per-episode plays (server counter), live concurrent listeners, export CSV.
