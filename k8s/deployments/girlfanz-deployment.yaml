@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: girlfanz
+  namespace: fanz-ecosystem
+  labels:
+    app: girlfanz
+    platform: fanz
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: girlfanz
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: girlfanz
+        platform: fanz
+        tier: frontend
+    spec:
+      containers:
+      - name: girlfanz
+        image: registry.digitalocean.com/fanz/girlfanz:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: PLATFORM_NAME
+          value: "GirlFanz"
+        - name: PLATFORM_PORT
+          value: "5002"
+        envFrom:
+        - configMapRef:
+            name: fanz-config
+        - secretRef:
+            name: fanz-secrets
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/uploads
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: fanz-uploads-pvc
+      imagePullSecrets:
+      - name: digitalocean-registry

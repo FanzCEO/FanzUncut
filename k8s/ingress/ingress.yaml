@@ -1,0 +1,137 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fanz-ingress
+  namespace: fanz-ecosystem
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/websocket-services: "boyfanz-service"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - boyfanz.com
+    - www.boyfanz.com
+    secretName: boyfanz-tls
+  - hosts:
+    - girlfanz.com
+    - www.girlfanz.com
+    secretName: girlfanz-tls
+  - hosts:
+    - pupfanz.com
+    - www.pupfanz.com
+    secretName: pupfanz-tls
+  - hosts:
+    - transfanz.com
+    - www.transfanz.com
+    secretName: transfanz-tls
+  - hosts:
+    - taboofanz.com
+    - www.taboofanz.com
+    secretName: taboofanz-tls
+  rules:
+  - host: boyfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: boyfanz-service
+            port:
+              number: 80
+  - host: www.boyfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: boyfanz-service
+            port:
+              number: 80
+  - host: girlfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: girlfanz-service
+            port:
+              number: 80
+  - host: www.girlfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: girlfanz-service
+            port:
+              number: 80
+  - host: pupfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pupfanz-service
+            port:
+              number: 80
+  - host: www.pupfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pupfanz-service
+            port:
+              number: 80
+  - host: transfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: transfanz-service
+            port:
+              number: 80
+  - host: www.transfanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: transfanz-service
+            port:
+              number: 80
+  - host: taboofanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taboofanz-service
+            port:
+              number: 80
+  - host: www.taboofanz.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taboofanz-service
+            port:
+              number: 80

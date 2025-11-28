@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fanz-uploads-pvc
+  namespace: fanz-ecosystem
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: do-block-storage
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fanz-media-pvc
+  namespace: fanz-ecosystem
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: do-block-storage
+  resources:
+    requests:
+      storage: 500Gi

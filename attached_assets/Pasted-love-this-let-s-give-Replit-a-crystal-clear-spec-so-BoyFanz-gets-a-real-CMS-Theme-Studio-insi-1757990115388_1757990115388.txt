@@ -1,0 +1,241 @@
+love this. let’s give Replit a crystal-clear spec so BoyFanz gets a **real CMS + Theme Studio** inside the admin panel—Shopify vibes, but creator-economy native.
+
+I’ll outline **DB → API → file structure → admin UI → preview/publish flow → security → deploy steps**. This plugs straight into your existing **ThemeManager** (it already expects `/api/themes` endpoints, activation, etc.) and follows the same admin-gated pattern you used in **UserManagement** and **ModerationQueue**.
+
+---
+
+# 0) What we’re building (one sentence)
+
+A **headless + file-based CMS** with a **Theme Studio** so you can:
+
+* Edit theme settings (colors, fonts, effects), pages, menus, sections, and assets.
+* Live-preview drafts, then **Publish** to production.
+* Version & rollback themes like Shopify, from the **Admin → CMS** panel.
+* All changes are role-gated to admins only (hard RBAC).
+
+---
+
+# 1) Database (Drizzle/Postgres)
+
+Create these tables (names can be snake\_case). They back drafts, publishing, assets, and content:
+
+**Theming**
+
+* `themes(id, name, is_active bool, created_at, updated_at)`
+* `theme_versions(id, theme_id, label, status enum('draft','published','archived'), created_at)`
+* `theme_settings(id, theme_version_id, json jsonb, created_at)`
+* `theme_assets(id, theme_version_id, path, storage_key, mime, size_bytes, created_at)`
+
+**Content**
+
+* `pages(id, slug unique, title, template, status enum('draft','published'), seo jsonb, created_at, updated_at)`
+* `page_sections(id, page_id, type, sort, props jsonb)`  // block-based builder
+* `menus(id, handle unique, title, created_at)`
+* `menu_items(id, menu_id, parent_id null, title, url, sort)`
+
+**Ops**
+
+* `publishes(id, actor_id, theme_version_id, notes, created_at)`
+* `audit_logs(id, actor_id, action, entity, entity_id, meta jsonb, created_at)`
+
+*Add helpful indexes: `pages(slug)`, `theme_versions(theme_id,status)`, `theme_assets(theme_version_id,path)`.*
+
+---
+
+# 2) REST API (Express + Zod) — endpoints Replit should create
+
+> These match what your **ThemeManager** already calls (`/api/themes`, `/api/themes/:id/activate`), and extend into full CMS.
+
+**Theme Studio**
+
+* `GET /api/themes` — list themes & active one
+* `POST /api/themes` — create theme (name)
+* `GET /api/themes/active` — current active theme
+* `PUT /api/themes/:id` — update meta/settings
+* `PUT /api/themes/:id/activate` — set `is_active=true` + create publish record
+* `DELETE /api/themes/:id` — delete (guard: not active)
+
+**Versioning**
+
+* `POST /api/themes/:id/versions` — create draft from current published (clone assets/settings)
+* `GET /api/themes/:id/versions` — list versions
+* `POST /api/themes/:id/versions/:verId/publish` — publish draft → published + write `publishes`
+* `POST /api/themes/:id/versions/:verId/rollback` — clone target published → new published
+
+**Settings & Assets**
+
+* `GET /api/themes/:id/versions/:verId/settings`
+* `PUT /api/themes/:id/versions/:verId/settings` — save JSON (colors/typography/effects; aligns with your ThemeManager shape)
+* `POST /api/themes/:id/versions/:verId/assets/presign` — S3 presign (path)
+* `POST /api/themes/:id/versions/:verId/assets/complete` — store asset metadata (Sharp thumbs if image)
+
+**Pages & Menus**
+
+* `GET /api/pages?status=&q=`
+* `POST /api/pages` — create page (title, slug, template)
+* `GET /api/pages/:id` | `PUT /api/pages/:id` | `DELETE /api/pages/:id`
+* `POST /api/pages/:id/sections` — add block
+* `PUT /api/sections/:id` — update block props/sort
+* `DELETE /api/sections/:id`
+* `GET /api/menus` | `POST /api/menus`
+* `PUT /api/menus/:id` | `POST /api/menus/:id/items` | `PUT /api/menu-items/:id` | `DELETE /api/menu-items/:id`
+
+**Preview**
+
+* `GET /api/preview/start?themeVersionId=...` → returns `previewToken` (JWT)
+* Frontend preview uses `/?preview=1&themeVersion=<id>&token=<previewToken>` to render draft safely.
+
+> Gate everything above with **admin-only** middleware; your current admin pages already show “Access denied” if not admin — keep that pattern and move it to route guards for cleaner UX.
+
+---
+
+# 3) File-based theme structure (in repo)
+
+In `/themes/<theme-name>/`:
+
+```
+/themes/default/
+  config/
+    settings_schema.json      // form spec for Theme Studio
+  templates/
+    page.tsx                  // generic page
+    homepage.tsx              // home
+    creator-profile.tsx       // profile
+  sections/
+    hero-banner.tsx
+    media-grid.tsx
+    callout.tsx
+    newsletter.tsx
+  snippets/
+    price-badge.tsx
+  assets/
+    logo.svg
+    placeholder.jpg
+```
+
+**settings\_schema.json** example (maps 1:1 to your ThemeManager fields):
+
+```json
+{
+  "name": "Default",
+  "settings": [
+    { "id": "colors.primary", "type": "color", "label": "Primary" },
+    { "id": "colors.secondary", "type": "color", "label": "Secondary" },
+    { "id": "typography.fontDisplay", "type": "text", "label": "Display Font" },
+    { "id": "effects.neonIntensity", "type": "range", "min": 0, "max": 2, "step": 0.1 }
+  ]
+}
+```
+
+At render time:
+
+* Load **active theme** + **theme\_settings.json** for published version.
+* Inject CSS vars to Tailwind (e.g., `--color-primary`, `--color-secondary`) so your existing UI picks it up (ThemeManager already uses color tokens like `primary`, `secondary`, `accent`).
+
+---
+
+# 4) Admin UI (routes + screens)
+
+Add these routes under **/admin**:
+
+* `/admin/themes` → existing **ThemeManager** (list, create, activate)
+* `/admin/cms` → **Theme Studio Home** (choose theme & version, open editor)
+* `/admin/cms/editor` → **Visual Editor**:
+
+  * **Settings** tab → auto-render inputs from `settings_schema.json` (color pickers, toggles, fonts).
+  * **Pages** tab → pages table; click to open block editor (drag/drop `page_sections`).
+  * **Menus** tab → menu + nested items editor.
+  * **Assets** tab → upload (presigned) and browse.
+  * **Preview** pane (right) → live iframe (`/?preview=1&themeVersion=<id>&token=...`) with WS hot-reload.
+
+Use the same component library (shadcn/ui) and patterns as your current admin pages for consistency; the **admin-only checks** you already coded set the precedent.
+
+---
+
+# 5) Rendering pipeline
+
+* **Public** requests (no preview): load **active published** theme + settings and render templates → hydrate React.
+* **Preview** requests (with `preview=1` + token): render using the **draft version**.
+* **Sections** are functional components that accept `props` from `page_sections.props`.
+* **Entitlements** still apply (feed/creator/PPV) — CMS controls layout & marketing, not paywall logic.
+
+---
+
+# 6) Publish & rollback flow (Shopify-style)
+
+1. Create/duplicate **theme version** → edit settings/pages/sections/assets.
+2. Click **Preview** to QA.
+3. Click **Publish** → mark version `published`, flip `themes.is_active` if it’s a different theme, write `publishes` + `audit_logs`.
+4. **Rollback** from history by cloning any prior `published` version to a new `published` record (immutable history).
+
+---
+
+# 7) Security & roles
+
+* Only `role=admin` can access `/admin/*` (server middleware + frontend route guard).
+* **Audit every change** (who changed what).
+* **Asset access**: theme assets can be public; user media remains entitlement-gated by your content pipeline.
+
+---
+
+# 8) Replit tasks (exact checklist)
+
+**Backend**
+
+1. Add Drizzle models/migrations for tables above.
+2. Implement API routes exactly as listed (use Zod DTOs).
+3. Add S3 client + presign & complete for theme assets (separate bucket/prefix from creator media).
+4. Add preview JWT signer (`/api/preview/start`).
+5. Add publish service (transactionally flip statuses, write logs).
+
+**Frontend**
+
+1. Create `/admin/cms` and `/admin/cms/editor` routes with admin guard (reuse your existing “Access denied” logic as a guard).
+2. Extend **ThemeManager** to show a **“Open in Editor”** button per theme/version that deep-links to the editor.
+3. Build Settings/Pages/Menus/Assets tabs + iframe preview.
+4. Inject CSS variables from saved settings to the root theme provider so they flow through Tailwind/shadcn.
+
+**ENV**
+
+```
+THEME_S3_BUCKET=...
+THEME_S3_REGION=...
+THEME_S3_KEY=...
+THEME_S3_SECRET=...
+PREVIEW_JWT_SECRET=...
+```
+
+---
+
+# 9) Minimal API shapes (so your current UI works today)
+
+These align **exactly** with your existing ThemeManager calls:
+
+```http
+GET  /api/themes
+GET  /api/themes/active
+POST /api/themes                       // body: { name, ...optional settings }
+PUT  /api/themes/:id                   // body: { name?, settings? }
+PUT  /api/themes/:id/activate          // no body
+DELETE /api/themes/:id
+```
+
+…and then layer the CMS routes for pages/menus/versions as listed above.
+
+---
+
+## Why this fits what you have
+
+* **ThemeManager.tsx** already expects themed CRUD + activate endpoints and admin-only gating — we’re honoring that contract.
+* Your admin pages follow the **admin-only access** pattern we’ll reuse as route guards.
+* This keeps the dashboard/pages you built, but gives you **Shopify-level control** over appearance, pages, and navigation — from the **Admin Panel**.
+
+---
+
+if you want, I’ll spit out:
+
+* Drizzle schema files,
+* Express route handlers (themes, versions, pages, menus, assets, preview, publish),
+* A ready-made **Theme Editor** screen (React) that plugs into your UI kit,
+
+so you can paste into Replit and go live.

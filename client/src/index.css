@@ -1,0 +1,626 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* CORE THEME - EXACT MATCH TO BOYFANZ LOGO */
+  --background: hsl(0, 0%, 2%); /* Ultra dark smoky black #050505 */
+  --foreground: hsl(0, 0%, 92%);
+  --card: hsl(0, 0%, 5%); /* Darker card background */
+  --card-foreground: hsl(0, 0%, 90%);
+  --popover: hsl(0, 0%, 4%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --primary: hsl(0, 100%, 50%); /* Bright red neon #ff0000 */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(40, 65%, 55%); /* Warm golden-bronze from banana */
+  --secondary-foreground: hsl(0, 0%, 0%);
+  --muted: hsl(0, 0%, 12%);
+  --muted-foreground: hsl(0, 0%, 65%);
+  --accent: hsl(40, 65%, 55%); /* Warm golden-bronze */
+  --accent-foreground: hsl(0, 0%, 0%);
+  --destructive: hsl(0, 80%, 40%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 15%);
+  --input: hsl(0, 0%, 8%);
+  --ring: hsl(0, 100%, 50%);
+  --radius: 0.25rem;
+  
+  /* LOGO-EXACT COLOR PALETTE */
+  --neon-red: hsl(0, 100%, 50%); /* #ff0000 - Exact red from BOYFANZ text */
+  --neon-red-glow: hsl(0, 100%, 45%); /* Deeper red for outer glow */
+  --golden-bronze: hsl(40, 65%, 55%); /* #d4a959 - Banana golden tone */
+  --golden-bronze-dark: hsl(35, 55%, 45%); /* #b8860b - Darker bronze shadow */
+  --golden-bronze-light: hsl(45, 75%, 65%); /* #f4d03f - Lighter golden highlight */
+  --smoky-black: hsl(0, 0%, 2%); /* #050505 - Ultra dark background */
+  --charcoal-smoke: hsl(0, 0%, 8%); /* #141414 - Smoky charcoal */
+  --fog-gray: hsl(0, 0%, 20%); /* #333333 - Fog/smoke midtone */
+  
+  /* Chart colors - logo palette only */
+  --chart-1: hsl(0, 100%, 50%);
+  --chart-2: hsl(0, 0%, 78%);
+  --chart-3: hsl(40, 65%, 55%);
+  --chart-4: hsl(0, 0%, 40%);
+  --chart-5: hsl(0, 80%, 40%);
+  
+  /* Sidebar colors */
+  --sidebar: hsl(0, 0%, 2%);
+  --sidebar-foreground: hsl(0, 0%, 98%);
+  --sidebar-primary: hsl(0, 100%, 50%);
+  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-accent: hsl(0, 0%, 12%);
+  --sidebar-accent-foreground: hsl(0, 0%, 78%);
+  --sidebar-border: hsl(0, 0%, 15%);
+  --sidebar-ring: hsl(0, 0%, 85%);
+}
+
+.light {
+  /* Keep light theme minimal */
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(0, 0%, 10%);
+  --card: hsl(0, 0%, 98%);
+  --card-foreground: hsl(0, 0%, 10%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(0, 0%, 10%);
+  --primary: hsl(0, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(43, 74%, 49%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(0, 0%, 96%);
+  --muted-foreground: hsl(0, 0%, 45%);
+  --accent: hsl(43, 74%, 49%);
+  --accent-foreground: hsl(0, 0%, 0%);
+  --destructive: hsl(0, 80%, 50%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(0, 0%, 90%);
+  --input: hsl(0, 0%, 95%);
+  --ring: hsl(0, 100%, 50%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    position: relative;
+    min-height: 100vh;
+  }
+  
+  /* SEX DUNGEON DARKNESS - BARELY VISIBLE BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/underground-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.08; /* Nearly invisible, just texture hints */
+    z-index: 1;
+    pointer-events: none;
+    filter: brightness(0.15) contrast(1.5) blur(2px); /* Deep dungeon darkness */
+  }
+  
+  /* OPPRESSIVE DUNGEON VIGNETTE - HEAVY SHADOWS */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, rgba(3,3,3,0.4) 0%, rgba(0,0,0,0.95) 100%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* TYPOGRAPHY - ONLY 2 FONTS - SUBTLE GLOW LIKE DIM NEON SIGNS */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Bebas Neue", sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: hsl(0, 0%, 95%);
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  .font-display {
+    font-family: "Bebas Neue", sans-serif !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase;
+  }
+
+  .font-body {
+    font-family: "Inter", sans-serif !important;
+  }
+}
+
+@layer components {
+  /* SUBTLE NEON GLOW - DIM SEX DUNGEON NEON SIGNS (15% INTENSITY) */
+  .glow-effect {
+    box-shadow: 
+      0 0 4px rgba(255, 0, 0, 0.075),
+      0 0 8px rgba(255, 0, 0, 0.045),
+      0 0 12px rgba(255, 0, 0, 0.023);
+    transition: all 0.3s ease;
+  }
+  
+  .glow-effect:hover {
+    box-shadow: 
+      0 0 6px rgba(255, 0, 0, 0.105),
+      0 0 12px rgba(255, 0, 0, 0.06),
+      0 0 18px rgba(255, 0, 0, 0.03);
+    transform: translateY(-2px);
+  }
+  
+  /* PRIMARY NEON TEXT - DIM RED NEON LIKE SEX DUNGEON LIGHTING (15% INTENSITY) */
+  .neon-text, .neon-sign {
+    color: #ff0000;
+    text-shadow: 
+      0 0 2px rgba(255, 0, 0, 0.15),
+      0 0 4px rgba(255, 0, 0, 0.12),
+      0 0 6px rgba(255, 0, 0, 0.09);
+    animation: subtle-pulse 4s ease-in-out infinite;
+  }
+
+  /* WARM GOLDEN-BRONZE TEXT - DIM GOLD NEON (15% INTENSITY) */
+  .neon-sign-golden {
+    color: #d4a959;
+    text-shadow: 
+      0 0 2px rgba(212, 169, 89, 0.14),
+      0 0 4px rgba(212, 169, 89, 0.08),
+      0 0 6px rgba(212, 169, 89, 0.03);
+  }
+  
+  /* CLEAN CARD STYLING */
+  .card {
+    background: var(--charcoal-dark);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* BUTTON STYLING - DIM RED NEON SIGNS (15% GLOW) */
+  .neon-button {
+    background: transparent;
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+    text-shadow: 0 0 2px rgba(255, 0, 0, 0.075);
+    box-shadow: 
+      0 0 3px rgba(255, 0, 0, 0.03),
+      inset 0 0 2px rgba(255, 0, 0, 0.008);
+    transition: all 0.3s ease;
+  }
+
+  .neon-button:hover {
+    text-shadow: 0 0 3px rgba(255, 0, 0, 0.12);
+    box-shadow: 
+      0 0 5px rgba(255, 0, 0, 0.06),
+      inset 0 0 3px rgba(255, 0, 0, 0.015);
+    transform: translateY(-1px);
+  }
+
+  /* GOLDEN-BRONZE BUTTON - DIM GOLD NEON (15% GLOW) */
+  .gold-button {
+    background: transparent;
+    border: 1px solid var(--golden-bronze);
+    color: var(--golden-bronze);
+    text-shadow: 0 0 2px rgba(212, 169, 89, 0.075);
+    box-shadow: 
+      0 0 3px rgba(212, 169, 89, 0.03),
+      inset 0 0 2px rgba(212, 169, 89, 0.008);
+    transition: all 0.3s ease;
+  }
+
+  .gold-button:hover {
+    text-shadow: 0 0 3px rgba(212, 169, 89, 0.12);
+    box-shadow: 
+      0 0 5px rgba(212, 169, 89, 0.06),
+      inset 0 0 3px rgba(212, 169, 89, 0.015);
+    transform: translateY(-1px);
+  }
+  
+  /* SIMPLE INPUT STYLING */
+  .club-input {
+    background: var(--charcoal-black);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: hsl(0, 0%, 95%);
+    transition: all 0.3s ease;
+  }
+
+  .club-input:focus {
+    border-color: var(--neon-red-dark);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.1);
+    background: var(--charcoal-dark);
+  }
+
+  .club-input::placeholder {
+    color: hsl(0, 0%, 40%);
+  }
+
+  /* RESTRAINED BORDER GLOW */
+  .neon-border {
+    border: 1px solid var(--neon-red-dark);
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.1);
+  }
+  
+  /* CLEAN TEXT COLORS - NO EXCESSIVE GLOW */
+  .text-accent {
+    color: var(--neon-gold);
+  }
+  
+  /* SEEDY CLASSES - LOGO EXACT COLORS */
+  .seedy-neon-red {
+    color: #ff0000;
+    text-shadow: 
+      0 0 7px rgba(255, 0, 0, 0.7),
+      0 0 12px rgba(255, 0, 0, 0.4);
+  }
+
+  .seedy-neon-golden {
+    color: #d4a959;
+    text-shadow: 
+      0 0 7px rgba(212, 169, 89, 0.6),
+      0 0 12px rgba(212, 169, 89, 0.3);
+  }
+
+  .seedy-neon-silver, .seedy-neon-white, .seedy-neon-blue,
+  .neon-white-body {
+    color: hsl(0, 0%, 85%);
+  }
+
+  /* Remove all extra neon color classes */
+  .neon-electric-blue, .neon-toxic-green, .neon-hot-pink,
+  .neon-purple, .neon-yellow, .neon-orange,
+  .neon-crimson, .neon-red {
+    color: var(--neon-red);
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+}
+
+/* SUBTLE ANIMATIONS */
+
+/* Logo pulse - gentle breathing effect */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+    text-shadow: 
+      0 0 5px rgba(255, 0, 0, 0.8),
+      0 0 10px rgba(255, 0, 0, 0.6),
+      0 0 20px rgba(255, 0, 0, 0.4);
+  }
+  50% {
+    opacity: 0.95;
+    text-shadow: 
+      0 0 8px rgba(255, 0, 0, 0.9),
+      0 0 15px rgba(255, 0, 0, 0.7),
+      0 0 25px rgba(255, 0, 0, 0.5);
+  }
+}
+
+/* Occasional flicker - rare and brief */
+@keyframes occasional-flicker {
+  0%, 99.5%, 100% {
+    opacity: 1;
+  }
+  99.6%, 99.8% {
+    opacity: 0.8;
+  }
+}
+
+/* Apply occasional flicker only to main logo */
+.logo-flicker {
+  animation: occasional-flicker 15s ease-in-out infinite;
+}
+
+/* SCROLLBAR STYLING */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon-red-dark) var(--charcoal-dark);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--charcoal-dark);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--neon-red-dark);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-red);
+}
+
+/* UTILITY CLASSES */
+.smoky-bg {
+  background: var(--charcoal-black);
+}
+
+.retro-border {
+  border: 1px solid var(--neon-red-dark);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.1);
+}
+
+.gritty-texture {
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 100px,
+      rgba(255, 255, 255, 0.01) 100px,
+      rgba(255, 255, 255, 0.01) 101px
+    );
+}
+
+.club-button {
+  background: linear-gradient(135deg, 
+    rgba(26, 26, 26, 0.9) 0%, 
+    rgba(10, 10, 10, 0.95) 100%
+  );
+  border: 1px solid var(--neon-red-dark);
+  color: var(--neon-red);
+  box-shadow: 0 2px 10px rgba(255, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.club-button:hover {
+  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.homepage-bg {
+  background: var(--charcoal-black);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+:focus {
+  outline: 2px solid var(--neon-red);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--neon-red);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 10px;
+  background: var(--charcoal-black);
+  color: hsl(0, 0%, 95%);
+  padding: 8px 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 10px;
+}
+
+/* Ensure content is above overlays */
+.homepage-bg .relative {
+  position: relative;
+  z-index: 10;
+}
+
+/* Remove all unused animation keyframes */
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+/* Clean simple notification dot */
+.notification-dot {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+/* Touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Sidebar link transitions */
+.sidebar-link {
+  transition: all 0.2s ease;
+}
+
+.sidebar-link.active {
+  background: rgba(255, 0, 0, 0.1);
+  border-right: 2px solid var(--neon-red);
+}
+
+/* GLASS MORPHISM EFFECTS - UNDERGROUND SEX DUNGEON AESTHETIC */
+
+/* Base glass effect - transparent with blur */
+.glass-effect {
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(255, 0, 0, 0.02);
+}
+
+/* Glass card - darker, more opaque */
+.glass-card {
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 0, 0, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(255, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(15, 15, 15, 0.75);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(255, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Glass panel - lighter, more transparent */
+.glass-panel {
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 0 10px rgba(255, 255, 255, 0.01);
+}
+
+/* Glass button - interactive element */
+.glass-button {
+  background: rgba(26, 26, 26, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  box-shadow: 
+    0 4px 16px rgba(255, 0, 0, 0.2),
+    inset 0 0 10px rgba(255, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.glass-button:hover {
+  background: rgba(35, 35, 35, 0.6);
+  border: 1px solid rgba(255, 0, 0, 0.5);
+  box-shadow: 
+    0 6px 20px rgba(255, 0, 0, 0.3),
+    inset 0 0 15px rgba(255, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Frosted glass - heavily blurred */
+.frosted-glass {
+  background: rgba(10, 10, 10, 0.3);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Neon-bordered glass */
+.glass-neon-red {
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  box-shadow: 
+    0 0 20px rgba(255, 0, 0, 0.2),
+    inset 0 0 15px rgba(255, 0, 0, 0.03);
+}
+
+.glass-neon-gold {
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(212, 169, 89, 0.3);
+  box-shadow: 
+    0 0 20px rgba(212, 169, 89, 0.15),
+    inset 0 0 15px rgba(212, 169, 89, 0.03);
+}
+
+/* LOGO-MATCHED NEON TYPOGRAPHY - EXACT BOYFANZ GLOW */
+
+/* Large display text - matches logo red intensity */
+.neon-display {
+  font-family: "Bebas Neue", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ff0000;
+  text-shadow: 
+    0 0 10px rgba(255, 0, 0, 1),
+    0 0 20px rgba(255, 0, 0, 0.9),
+    0 0 35px rgba(255, 0, 0, 0.7),
+    0 0 50px rgba(255, 0, 0, 0.4);
+  animation: neon-flicker-subtle 6s ease-in-out infinite;
+}
+
+/* Golden-bronze display - matches banana */
+.neon-display-gold {
+  font-family: "Bebas Neue", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #d4a959;
+  text-shadow: 
+    0 0 10px rgba(212, 169, 89, 0.9),
+    0 0 20px rgba(212, 169, 89, 0.6),
+    0 0 35px rgba(212, 169, 89, 0.4),
+    0 0 50px rgba(212, 169, 89, 0.2);
+}
+
+/* Glowing text outline effect */
+.text-outline-glow {
+  -webkit-text-stroke: 1px rgba(255, 0, 0, 0.5);
+  text-stroke: 1px rgba(255, 0, 0, 0.5);
+  text-shadow: 
+    0 0 5px rgba(255, 0, 0, 0.8),
+    0 0 10px rgba(255, 0, 0, 0.6);
+}
+
+/* Flickering neon animation - very subtle */
+@keyframes neon-flicker-subtle {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+    text-shadow: 
+      0 0 10px rgba(255, 0, 0, 1),
+      0 0 20px rgba(255, 0, 0, 0.8),
+      0 0 30px rgba(255, 0, 0, 0.6),
+      0 0 40px rgba(255, 0, 0, 0.4);
+  }
+  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+    text-shadow: 
+      0 0 5px rgba(255, 0, 0, 0.7),
+      0 0 10px rgba(255, 0, 0, 0.5);
+  }
+}
+
+/* Underground dungeon atmosphere */
+.dungeon-atmosphere {
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 10, 0.9) 0%,
+    rgba(20, 0, 0, 0.8) 50%,
+    rgba(10, 10, 10, 0.9) 100%
+  );
+  box-shadow: 
+    inset 0 0 100px rgba(255, 0, 0, 0.05),
+    inset 0 0 200px rgba(0, 0, 0, 0.8);
+}
